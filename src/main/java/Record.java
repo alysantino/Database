@@ -7,13 +7,7 @@ public class Record implements Comparable<Record>, Serializable {
     private String ClusteringKeyType;
 
     public Record(Hashtable<String, Object> values, String ClusteringKeyType) {
-        // {
-        // "name": "Ahmed",
-        // "id": 1,
-        // "gpa": 1.5
-        // }
         super();
-
         this.values = values;
         this.ClusteringKeyType = ClusteringKeyType;
     }
@@ -33,8 +27,7 @@ public class Record implements Comparable<Record>, Serializable {
         } else if (this.ClusteringKeyType.equals("java.util.Date")) {
             return ((Date) this.getValues().get("id")).compareTo((Date) R.getValues().get("id"));
         }
-        //add statment to handle dates
         return 0;
-
     }
+    
 }
