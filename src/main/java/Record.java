@@ -1,3 +1,5 @@
+package main.java;
+
 import java.io.Serializable;
 import java.util.Hashtable;
 import java.util.Date;
