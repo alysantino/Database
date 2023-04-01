@@ -8,7 +8,7 @@ import java.util.Hashtable;
 import java.util.Vector;
 
 public class Table implements Serializable {
-    Vector<String> pages;
+    Vector<page> pages;
     String table_name;
     String clustering_key;
     Hashtable<String, String> colNameType;
@@ -18,8 +18,7 @@ public class Table implements Serializable {
     public Table(String table_name, String clustering_key, Hashtable<String, String> colNameType,
             Hashtable<String, String> colNameMin, Hashtable<String, String> colNameMax) throws IOException {
         super();
-        this.pages = new Vector<String>();
-
+        this.pages = new Vector<page>();
         this.table_name = table_name;
         this.clustering_key = clustering_key;
         this.colNameType = colNameType;
@@ -37,18 +36,34 @@ public class Table implements Serializable {
             } else {
                 metadata_string += (',' + "false");
             }
-            metadata_string += (',' + "false");
+            metadata_string += (',' + "null");
+            metadata_string += (',' + "null");
             metadata_string += (',' + colNameMin.get(key));
             metadata_string += (',' + colNameMax.get(key));
             metadata_string += "\n";
             sb.append(metadata_string);
 
             fw.write(sb.toString());
-
         }
         fw.flush();
         fw.close();
+
     }
+    public Vector<page> getPages() {
+        return pages;
+    }
+    public void addToPages(page page) {
+        this.pages.add(page);
+    }
+    // get and set table name
+    public String getTable_name() {
+        return table_name;
+    }
+    public void setTable_name(String table_name) {
+        this.table_name = table_name;
+    }
+
+
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public static void main(String[] args) throws IOException {
@@ -68,4 +83,5 @@ public class Table implements Serializable {
         Table t = new Table(strTableName, "id", htblColNameType, htblColNameMin, htblColNameMax);
         System.out.println(0);
     }
+
 }
