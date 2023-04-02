@@ -19,6 +19,9 @@ public class Table implements Serializable {
             Hashtable<String, String> colNameMin, Hashtable<String, String> colNameMax) throws IOException {
         super();
         this.pages = new Vector<page>();
+        page page=new page();
+        page.setTable(this);
+        pages.add(page);
         this.table_name = table_name;
         this.clustering_key = clustering_key;
         this.colNameType = colNameType;
