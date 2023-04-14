@@ -11,7 +11,7 @@ public class DBApp {
     }
 
     public void init() {
-        File file = new File("src/main/resources/MetaData.csv");
+        tables = new Hashtable<String, Table>();
     }
 
     public void createTable(String strTableName,
