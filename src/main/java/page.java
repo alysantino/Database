@@ -117,14 +117,27 @@ public class page implements Serializable {
 			}
 		}
 	}
+	//test
 
-	// If all the rows in a page are deleted, then you are required to delete that
-	// page. Do not
-	// keep around completely empty pages. In the case of insert, if you are trying
-	// to insert in a
-	// full page, shift one row down to the following page. Do not create a new page
-	// unless you
-	// are in the last page of the table and that last one was full.
+	public void delete(Record r) {
+		int Recordindex = binarySearch(r);
+		// shift all the record that are after the record i want to delete
+		int i = NumOfElem - Recordindex - 1;
+		while (i > 0) {
+			// shift all the records after the i to the left
+			recordsInPage.set(Recordindex + i - 1, recordsInPage.get(Recordindex + i));
+			i--;
+		}
+		recordsInPage.remove(NumOfElem - 1);
+		NumOfElem--;
+		if (NumOfElem == 0) {
+			minValueInPage = 0;
+			maxValueInPage = 0;
+		} else {
+			minValueInPage = (int) recordsInPage.get(0).getValues().get("id");
+			maxValueInPage = (int) recordsInPage.get(NumOfElem - 1).getValues().get("id");
+		}
+	}
 
 	// getter for min and max
 
