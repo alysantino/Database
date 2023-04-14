@@ -128,11 +128,11 @@ public class page implements Serializable {
 
 	// getter for min and max
 
-	public Comparable getMin() {
+	public int getMin() {
 		return minValueInPage;
 	}
 
-	public Comparable getMax() {
+	public int getMax() {
 		return maxValueInPage;
 	}
 
