@@ -16,10 +16,12 @@ public class page implements Serializable {
 	private Vector<Record> recordsInPage;
 	private Comparable minValueInPage;
 	private Comparable maxValueInPage;
+	private int pageID;
 
 	public page(Table t) {
 		Table = t;
 		Table.getPages().add(this);
+		pageID = Table.getPages().indexOf(this);
 		recordsInPage = new Vector<Record>();
 		NumOfElem = 0;
 		minValueInPage = 0;
@@ -197,6 +199,10 @@ public class page implements Serializable {
 
 	public void setTable(Table table) {
 		Table = table;
+	}
+
+	public int getPageindex() {
+		return pageID;
 	}
 
 	// tosring method returns the table name and the number of elements in the page

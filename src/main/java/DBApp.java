@@ -23,10 +23,6 @@ public class DBApp {
         Table table = new Table(strTableName, strClusteringKeyColumn, htblColNameType, htblColNameMin, htblColNameMax);
         System.out.println("Table created successfully");
         tables.put(strTableName, table);
-        // print the table names inside the hashtable
-        for (String key : tables.keySet()) {
-            System.out.println(key);
-        }
     }
 
     public void insertIntoTable(String strTableName,
@@ -42,28 +38,36 @@ public class DBApp {
         }
         int id = (int) getClusteringKeyValue(record, strTableName);
         page page = getPage(table, id);
-
+        if (page.getNumOfElem() > 0)
+            deserialize(table, page.getPageindex());
         page.insert(record);
+        System.out.println(page.getRecords());
+        serialize(page);
     }
 
     public void serialize(page page) {
         try {
-            FileOutputStream fileOut = new FileOutputStream("src/main/resources/pages.bin");
+            int id = page.getPageindex();
+            String fileName = "src/main/resources/pages/" + page.getTableName() + "page_" + id + ".bin";
+            FileOutputStream fileOut = new FileOutputStream(fileName);
             ObjectOutputStream out = new ObjectOutputStream(fileOut);
             out.writeObject(page);
             out.close();
             fileOut.close();
-            System.out.println("Table serialized and saved to pages.bin");
+            System.out.println("Page serialized");
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
-    public page deserialize() {
+
+    public page deserialize(Table table, int id) {
+        String fileName = "src/main/resources/pages/" + table.getTable_name() + "page_" + id + ".bin";
         page page = null;
         try {
-            FileInputStream fileIn = new FileInputStream("src/main/resources/pages.bin");
+            FileInputStream fileIn = new FileInputStream(fileName);
             ObjectInputStream in = new ObjectInputStream(fileIn);
             page = (page) in.readObject();
+            System.out.println("Page deserialized");
             in.close();
             fileIn.close();
         } catch (IOException i) {
@@ -77,6 +81,7 @@ public class DBApp {
         return page;
 
     }
+
     private String getClusteringKeyType(String strTableName) throws IOException {
         BufferedReader reader = new BufferedReader(new FileReader("src/main/resources/MetaData.csv"));
         String line;
@@ -113,8 +118,11 @@ public class DBApp {
     }
 
     private page getPage(Table table, int id) {
-        // get the page from the vector of pages in the table where id is between the min and max of the page
-        page page = new page(table);
+        // get the page from the vector of pages in the table where id is between the
+        // min and max of the page
+        if(table.getPages().size()==0)
+            return new page(table);
+        page page=table.getPages().get(0);
         for (int i = 0; i < table.getPages().size(); i++) {
             if (id >= (int) table.getPages().get(i).getMin() && id <= (int) table.getPages().get(i).getMax()) {
                 page = table.getPages().get(i);
@@ -146,16 +154,14 @@ public class DBApp {
         // get the table from the hash table
         Table table = db.getTable(tableName);
         Hashtable<String, Object> htblColNameValue = new Hashtable<>();
+        Hashtable<String, Object> record2 = new Hashtable<>();
         htblColNameValue.put("id", 1);
         htblColNameValue.put("name", "Ahmed");
         htblColNameValue.put("gpa", 3.5);
+        record2.put("id", 2);
+        record2.put("name", "santino");
+        record2.put("gpa", 2.1);
         db.insertIntoTable(tableName, htblColNameValue);
-        System.out.println(table.getPages());
-        db.serialize(table.getPages().get(0));
-        db.serialize(table.getPages().get(0));
-        page page1 = db.deserialize();
-        System.out.println(page1.getRecords());
-   
-
+        db.insertIntoTable(tableName, record2);
     }
 }
