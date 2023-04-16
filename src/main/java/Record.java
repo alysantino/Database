@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.util.Hashtable;
 import java.util.Date;
 
-public class Record implements Comparable<Record>, Serializable {
+public class Record extends Hashtable<String, Object> implements Comparable<Record>, Serializable  {
     private Hashtable<String, Object> values;
     private String ClusteringKeyType;
 
@@ -30,6 +30,18 @@ public class Record implements Comparable<Record>, Serializable {
             return ((Date) this.getValues().get("id")).compareTo((Date) R.getValues().get("id"));
         }
         return 0;
+    }
+
+    public Object getClusteringKeyValue() {
+        return null;
+    }
+    //tostring method to print the record
+    public String toString() {
+        String s = "";
+        for (String key : values.keySet()) {
+            s += key + " : " + values.get(key) + " ";
+        }
+        return s;
     }
     
 }

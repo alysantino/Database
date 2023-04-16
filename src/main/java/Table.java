@@ -9,40 +9,37 @@ import java.util.Vector;
 
 public class Table implements Serializable {
     Vector<page> pages;
-    String table_name;
-    String clustering_key;
-    Hashtable<String, String> colNameType;
-    Hashtable<String, String> colNameMin;
-    Hashtable<String, String> colNameMax;
+    String strTableName;
+    String strClusteringKeyColumn;
+    Hashtable<String, String> htblColNameType;
+    Hashtable<String, String> htblColNameMin;
+    Hashtable<String, String> htblColNameMax;
 
-    public Table(String table_name, String clustering_key, Hashtable<String, String> colNameType,
-            Hashtable<String, String> colNameMin, Hashtable<String, String> colNameMax) throws IOException {
+    public Table(String strTableName, String strClusteringKeyColumn, Hashtable<String, String>  htblColNameType,
+            Hashtable<String, String> htblColNameMin, Hashtable<String, String>  htblColNameMax) throws IOException {
         super();
         this.pages = new Vector<page>();
-        page page=new page();
-        page.setTable(this);
-        pages.add(page);
-        this.table_name = table_name;
-        this.clustering_key = clustering_key;
-        this.colNameType = colNameType;
-        this.colNameMin = colNameMin;
-        this.colNameMax = colNameMax;
+        this.strTableName = strTableName;
+        this.strClusteringKeyColumn = strClusteringKeyColumn;
+        this.htblColNameType = htblColNameType;
+        this.htblColNameMin = htblColNameMin;
+        this.htblColNameMax = htblColNameMax;
 
         FileWriter fw = new FileWriter("src/main/resources/MetaData.csv", true);
-        for (String key : Collections.list(colNameType.keys())) {
+        for (String key : Collections.list(htblColNameType.keys())) {
             StringBuilder sb = new StringBuilder();
-            String metadata_string = this.table_name;
+            String metadata_string = this.strTableName;
             metadata_string += (',' + key);
-            metadata_string += (',' + colNameType.get(key));
-            if (key == clustering_key) {
+            metadata_string += (',' + htblColNameType.get(key));
+            if (key == strClusteringKeyColumn) {
                 metadata_string += (',' + "true");
             } else {
                 metadata_string += (',' + "false");
             }
             metadata_string += (',' + "null");
             metadata_string += (',' + "null");
-            metadata_string += (',' + colNameMin.get(key));
-            metadata_string += (',' + colNameMax.get(key));
+            metadata_string += (',' + htblColNameMin.get(key));
+            metadata_string += (',' + htblColNameMax.get(key));
             metadata_string += "\n";
             sb.append(metadata_string);
 
@@ -60,31 +57,9 @@ public class Table implements Serializable {
     }
     // get and set table name
     public String getTable_name() {
-        return table_name;
+        return strTableName;
     }
     public void setTable_name(String table_name) {
-        this.table_name = table_name;
+        this.strTableName = table_name;
     }
-
-
-
-    @SuppressWarnings({ "rawtypes", "unchecked" })
-    public static void main(String[] args) throws IOException {
-        String strTableName = "Student";
-        Hashtable htblColNameType = new Hashtable();
-        htblColNameType.put("id", "java.lang.Integer");
-        htblColNameType.put("name", "java.lang.String");
-        htblColNameType.put("gpa", "java.lang.double");
-        Hashtable htblColNameMin = new Hashtable();
-        htblColNameMin.put("id", "0");
-        htblColNameMin.put("name", "A");
-        htblColNameMin.put("gpa", "0.0");
-        Hashtable htblColNameMax = new Hashtable();
-        htblColNameMax.put("id", "100000");
-        htblColNameMax.put("name", "ZZZZZZZZZZZ");
-        htblColNameMax.put("gpa", "5.0");
-        Table t = new Table(strTableName, "id", htblColNameType, htblColNameMin, htblColNameMax);
-        System.out.println(0);
-    }
-
 }
