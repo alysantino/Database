@@ -24,25 +24,23 @@ public class page implements Serializable {
 		pageID = Table.getPages().indexOf(this);
 		recordsInPage = new Vector<Record>();
 		NumOfElem = 0;
-		minValueInPage = 0;
-		maxValueInPage = 0;
 	}
 
-	public int binarySearch(Record htblColNameValue) {
+	public int binarySearch(Record r) {
 		int low = 0;
 		int high = NumOfElem - 1;
 		int mid = 0;
 		while (low <= high) {
 			mid = (low + high) / 2;
-			if (recordsInPage.get(mid).compareTo(htblColNameValue) < 0) {
+			if (recordsInPage.get(mid).compareTo(r) < 0) {
 				low = mid + 1;
-			} else if (recordsInPage.get(mid).compareTo(htblColNameValue) > 0) {
+			} else if (recordsInPage.get(mid).compareTo(r) > 0) {
 				high = mid - 1;
 			} else {
 				return mid;
 			}
 		}
-		return 0;
+		return low;
 	}
 
 	// insert record in page sorted and then update min and max and create new page
@@ -51,10 +49,7 @@ public class page implements Serializable {
 		int Recordindex = binarySearch(r);
 		if (NumOfElem == 0) {
 			recordsInPage.add(r);
-			NumOfElem++;
-			minValueInPage = (int) r.getValues().get("id");
-			maxValueInPage = (int) r.getValues().get("id");
-			System.out.println("inserted " + NumOfElem + Table.getTable_name());
+			System.out.println("inserted the first element of the page ");
 		} else {
 			// if page is full
 			if (NumOfElem == n) {
@@ -64,20 +59,9 @@ public class page implements Serializable {
 				if (Pageindex == Table.getPages().size() - 1) {
 					// create new page
 					page newPage = new page(this.Table);
-					newPage.Table = this.Table;
-					newPage.setNumOfElem(0);
 					// only shift the last record to the new page
 					newPage.insert(recordsInPage.get(NumOfElem - 1));
-					newPage.setMin((int) newPage.getRecords().get(0).getValues().get("id"));
-					newPage.setMax((int) newPage.getRecords().get(newPage.getNumOfElem() - 1).getValues().get("id"));
-					// shift all the record that are after the record i want to insert
-					int i = NumOfElem - Recordindex - 1;
-					while (i > 0) {
-						// shift all the records after the i to the right
-						recordsInPage.set(Recordindex + i, recordsInPage.get(Recordindex + i - 1));
-						i--;
-					}
-					// insert the record in the right place
+					updatePage(newPage);
 					recordsInPage.add(Recordindex, r);
 					// insert the newpage in the vector of pages in the table
 					Table.getPages().add(newPage);
@@ -109,24 +93,19 @@ public class page implements Serializable {
 				}
 			}
 			if (NumOfElem < n && NumOfElem != 0) {
-				// shift all the record that are after the record i want to insert
-				int i = NumOfElem - Recordindex - 1;
-				while (i > 0) {
-					// shift all the records after the i to the right
-					recordsInPage.set(Recordindex + i, recordsInPage.get(Recordindex + i - 1));
-					i--;
-				}
 				recordsInPage.add(Recordindex, r);
-				NumOfElem++;
-				if (((Comparable) r.getValues().get("id")).compareTo(minValueInPage) < 0) {
-					minValueInPage = (int) recordsInPage.get(0).getValues().get("id");
-				}
-				if (((Comparable) r.getValues().get("id")).compareTo(maxValueInPage) > 0) {
-					maxValueInPage = (int) recordsInPage.get(NumOfElem - 1).getValues().get("id");
-				}
 			}
 
 		}
+		updatePage(this);
+	}
+
+	private void updatePage(page p) {
+		p.setNumOfElem(p.recordsInPage.size());
+		// update min and max
+		String clusteringkey = p.getRecords().get(0).getClusteringKeyName();
+		p.setMin((Comparable) recordsInPage.get(0).getValues().get(clusteringkey));
+		p.setMax((Comparable) recordsInPage.get(NumOfElem - 1).getValues().get(clusteringkey));
 	}
 
 	public void delete(Record r) {
@@ -160,11 +139,11 @@ public class page implements Serializable {
 	}
 
 	// setter for min and max
-	public void setMin(int min) {
+	public void setMin(Comparable min) {
 		this.minValueInPage = min;
 	}
 
-	public void setMax(int max) {
+	public void setMax(Comparable max) {
 		this.maxValueInPage = max;
 	}
 

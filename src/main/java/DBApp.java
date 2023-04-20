@@ -32,6 +32,8 @@ public class DBApp {
             throw new DBAppException("No clustering key found for the table");
         }
         Record record = new Record(htblColNameValue, clusteringKeyType);
+        record.setClusteringKeyName(getClusteringKeyName(strTableName));
+        record.setClusteringKeyValue(getClusteringKeyValue(record, strTableName));
         Table table = getTable(strTableName);
         if (table == null) {
             throw new DBAppException("No table found with the name " + strTableName);
@@ -61,6 +63,7 @@ public class DBApp {
     }
 
     public page deserialize(Table table, int id) {
+        //check if the bin file exists
         String fileName = "src/main/resources/pages/" + table.getTable_name() + "page_" + id + ".bin";
         page page = null;
         try {
@@ -153,15 +156,37 @@ public class DBApp {
         db.createTable(tableName, clusteringKey, colNameType, htblColNameMin, htblColNameMax);
         // get the table from the hash table
         Table table = db.getTable(tableName);
-        Hashtable<String, Object> htblColNameValue = new Hashtable<>();
+        Hashtable<String, Object> record1 = new Hashtable<>();
         Hashtable<String, Object> record2 = new Hashtable<>();
-        htblColNameValue.put("id", 1);
-        htblColNameValue.put("name", "Ahmed");
-        htblColNameValue.put("gpa", 3.5);
-        record2.put("id", 2);
+        Hashtable<String, Object> record3 = new Hashtable<>();
+        Hashtable<String, Object> record4 = new Hashtable<>();
+        Hashtable<String, Object> record5 = new Hashtable<>();
+        Hashtable<String, Object> record6 = new Hashtable<>();
+        record1.put("id", 2);
+        record1.put("name", "Ahmed");
+        record1.put("gpa", 3.5);
+        record2.put("id", 1);
         record2.put("name", "santino");
         record2.put("gpa", 2.1);
-        db.insertIntoTable(tableName, htblColNameValue);
+        record3.put("id", 3);
+        record3.put("name", "sheko");
+        record3.put("gpa", 1.2);
+        record4.put("id", 4);
+        record4.put("name", "beso");
+        record4.put("gpa", 1.2);
+        record5.put("id", 5);
+        record5.put("name", "zoza");
+        record5.put("gpa", 1.2);
+        record6.put("id", 6);
+        record6.put("name", "mo");
+        record6.put("gpa", 1.2);
+
+        db.insertIntoTable(tableName, record3);
+        db.insertIntoTable(tableName, record4);
+        db.insertIntoTable(tableName, record6);
         db.insertIntoTable(tableName, record2);
+        db.insertIntoTable(tableName, record1);
+        db.insertIntoTable(tableName, record5);
+        
     }
 }
