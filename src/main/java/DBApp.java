@@ -38,13 +38,35 @@ public class DBApp {
         if (table == null) {
             throw new DBAppException("No table found with the name " + strTableName);
         }
-        Comparable ClusteringKeyValue = (Comparable)getClusteringKeyValue(record, strTableName);
+        Comparable ClusteringKeyValue = (Comparable) getClusteringKeyValue(record, strTableName);
         page page = getPage(table, ClusteringKeyValue);
         if (page.getNumOfElem() > 0)
             deserialize(table, page.getPageindex());
         page.insert(record);
         System.out.println(page.getRecords());
         serialize(page);
+    }
+
+    public void deleteFromTable(String strTableName, Hashtable<String, Object> htblColNameValue)
+            throws DBAppException, IOException {
+        Table tbl = getTable(strTableName);
+        String clusteringKeyType = getClusteringKeyType(strTableName);
+        if (clusteringKeyType == null) {
+            throw new DBAppException("No clustering key found for the table");
+        }
+        Record rec = new Record(htblColNameValue, clusteringKeyType);
+        rec.setClusteringKeyName(getClusteringKeyName(strTableName));
+        rec.setClusteringKeyValue(getClusteringKeyValue(rec, strTableName));
+        if (tbl == null) {
+            throw new DBAppException("No table found with the name " + strTableName);
+        }
+        Comparable ClusteringKeyValue = (Comparable) getClusteringKeyValue(rec, strTableName);
+        page p = getPage(tbl, ClusteringKeyValue);
+        deserialize(tbl, p.getPageindex());
+        p.delete(rec);
+        System.out.println("Deleted successfully");
+        System.out.println(p.getRecords());
+        serialize(p);
     }
 
     public void serialize(page page) {
@@ -63,7 +85,7 @@ public class DBApp {
     }
 
     public page deserialize(Table table, int id) {
-        //check if the bin file exists
+        // check if the bin file exists
         String fileName = "src/main/resources/pages/" + table.getTable_name() + "page_" + id + ".bin";
         page page = null;
         try {
@@ -123,11 +145,12 @@ public class DBApp {
     private page getPage(Table table, Comparable id) {
         // get the page from the vector of pages in the table where id is between the
         // min and max of the page
-        if(table.getPages().size()==0)
+        if (table.getPages().size() == 0)
             return new page(table);
-        page page=table.getPages().get(0);
+        page page = table.getPages().get(0);
         for (int i = 0; i < table.getPages().size(); i++) {
-            if (id.compareTo(table.getPages().get(i).getMin())>0 && id.compareTo(table.getPages().get(i).getMax())<0) {
+            if (id.compareTo(table.getPages().get(i).getMin()) > 0
+                    && id.compareTo(table.getPages().get(i).getMax()) < 0) {
                 page = table.getPages().get(i);
             }
         }
@@ -162,10 +185,10 @@ public class DBApp {
         Hashtable<String, Object> record4 = new Hashtable<>();
         Hashtable<String, Object> record5 = new Hashtable<>();
         Hashtable<String, Object> record6 = new Hashtable<>();
-        record1.put("id", 2);
+        record1.put("id", 1);
         record1.put("name", "Ahmed");
         record1.put("gpa", 3.5);
-        record2.put("id", 1);
+        record2.put("id", 2);
         record2.put("name", "santino");
         record2.put("gpa", 2.1);
         record3.put("id", 3);
@@ -187,6 +210,7 @@ public class DBApp {
         db.insertIntoTable(tableName, record2);
         db.insertIntoTable(tableName, record1);
         db.insertIntoTable(tableName, record5);
-        
+        db.deleteFromTable(tableName, record4);
+
     }
 }

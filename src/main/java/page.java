@@ -111,21 +111,8 @@ public class page implements Serializable {
 	public void delete(Record r) {
 		int Recordindex = binarySearch(r);
 		// shift all the record that are after the record i want to delete
-		int i = NumOfElem - Recordindex - 1;
-		while (i > 0) {
-			// shift all the records after the i to the left
-			recordsInPage.set(Recordindex + i - 1, recordsInPage.get(Recordindex + i));
-			i--;
-		}
-		recordsInPage.remove(NumOfElem - 1);
-		NumOfElem--;
-		if (NumOfElem == 0) {
-			minValueInPage = 0;
-			maxValueInPage = 0;
-		} else {
-			minValueInPage = (int) recordsInPage.get(0).getValues().get("id");
-			maxValueInPage = (int) recordsInPage.get(NumOfElem - 1).getValues().get("id");
-		}
+		recordsInPage.remove(Recordindex);
+		updatePage(this);
 	}
 
 	// getter for min and max
