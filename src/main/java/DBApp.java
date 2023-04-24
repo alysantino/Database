@@ -38,8 +38,8 @@ public class DBApp {
         if (table == null) {
             throw new DBAppException("No table found with the name " + strTableName);
         }
-        int id = (int) getClusteringKeyValue(record, strTableName);
-        page page = getPage(table, id);
+        Comparable ClusteringKeyValue = (Comparable)getClusteringKeyValue(record, strTableName);
+        page page = getPage(table, ClusteringKeyValue);
         if (page.getNumOfElem() > 0)
             deserialize(table, page.getPageindex());
         page.insert(record);
@@ -120,14 +120,14 @@ public class DBApp {
         return tables.get(strTableName);
     }
 
-    private page getPage(Table table, int id) {
+    private page getPage(Table table, Comparable id) {
         // get the page from the vector of pages in the table where id is between the
         // min and max of the page
         if(table.getPages().size()==0)
             return new page(table);
         page page=table.getPages().get(0);
         for (int i = 0; i < table.getPages().size(); i++) {
-            if (id >= (int) table.getPages().get(i).getMin() && id <= (int) table.getPages().get(i).getMax()) {
+            if (id.compareTo(table.getPages().get(i).getMin())>0 && id.compareTo(table.getPages().get(i).getMax())<0) {
                 page = table.getPages().get(i);
             }
         }
