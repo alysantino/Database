@@ -5,7 +5,7 @@ import java.util.*;
 
 public class DBApp {
 
-    private Hashtable<String, Table> tables;
+    private static Hashtable<String, Table> tables;
 
     public DBApp() {
     }
@@ -50,6 +50,9 @@ public class DBApp {
     public void deleteFromTable(String strTableName, Hashtable<String, Object> htblColNameValue)
             throws DBAppException, IOException {
         Table tbl = getTable(strTableName);
+        if (tbl == null) {
+            throw new DBAppException("No table found with the name " + strTableName);
+        }
         String clusteringKeyType = getClusteringKeyType(strTableName);
         if (clusteringKeyType == null) {
             throw new DBAppException("No clustering key found for the table");
@@ -57,9 +60,7 @@ public class DBApp {
         Record rec = new Record(htblColNameValue, clusteringKeyType);
         rec.setClusteringKeyName(getClusteringKeyName(strTableName));
         rec.setClusteringKeyValue(getClusteringKeyValue(rec, strTableName));
-        if (tbl == null) {
-            throw new DBAppException("No table found with the name " + strTableName);
-        }
+
         Comparable ClusteringKeyValue = (Comparable) getClusteringKeyValue(rec, strTableName);
         page p = getPage(tbl, ClusteringKeyValue);
         deserialize(tbl, p.getPageindex());
@@ -69,7 +70,118 @@ public class DBApp {
         serialize(p);
     }
 
-    public void serialize(page page) {
+    public static Iterator selectFromTable(SQLTerm[] arrSQLTerms, String[] strarrOperators)
+            throws DBAppException {
+        // check if the array of terms and operators are valid
+        if (arrSQLTerms.length != strarrOperators.length + 1) {
+            throw new DBAppException("Invalid array of terms and operators");
+        }
+        Iterator result = null;
+
+        for (int i = 0; i < arrSQLTerms.length - 2; i++) {
+            SQLTerm term1 = arrSQLTerms[i];
+            SQLTerm term2 = arrSQLTerms[i + 1];
+            Iterator iterator1 = SearchInTable(term1.getTableName(), term1.getColumnName(), term1.getOperator(),
+                    term1.getValue());
+            Iterator iterator2 = SearchInTable(term2.getTableName(), term2.getColumnName(), term2.getOperator(),
+                    term2.getValue());
+
+            result = intersectIterators(iterator1, iterator2);
+
+        }
+        return result;
+
+    }
+
+    private static Iterator intersectIterators(Iterator iterator1, Iterator iterator2) {
+        Vector<Record> intersectList = new Vector<Record>();
+        while (iterator1.hasNext()) {
+            Record tuple1 = (Record) iterator1.next();
+            while (iterator2.hasNext()) {
+                Record tuple2 = (Record) iterator2.next();
+                if (tuple1.equals(tuple2)) {
+                    intersectList.add(tuple1);
+                }
+            }
+        }
+        return intersectList.iterator();
+    }
+
+    private static Iterator SearchInTable(String TableName, String _strColumnName, String _strOperator, Object _objValue) {
+        Table table = getTable(TableName);
+        Vector<Record> matchingRecords = new Vector<Record>();
+        // loop on all pages
+        for (int i = 0; i < table.getPages().size(); i++) {
+            page page = table.getPages().get(i);
+            // deserialize the page
+            page = deserialize(table, page.getPageindex());
+            // loop on all records in the page
+            for (int j = 0; j < page.getRecords().size(); j++) {
+                Record record = page.getRecords().get(j);
+                Object value = record.getValues().get(_strColumnName);
+                switch (_strOperator) {
+                    case "=":
+                        if (value.equals(_objValue)) {
+                            matchingRecords.add(record);
+                        }
+                        break;
+
+                    case ">":
+                        if (compareValues(value, _objValue) > 0) {
+                            matchingRecords.add(record);
+                        }
+                        break;
+
+                    case ">=":
+                        if (compareValues(value, _objValue) >= 0) {
+                            matchingRecords.add(record);
+                        }
+                        break;
+
+                    case "<":
+                        if (compareValues(value, _objValue) < 0) {
+                            matchingRecords.add(record);
+                        }
+                        break;
+
+                    case "<=":
+                        if (compareValues(value, _objValue) <= 0) {
+                            matchingRecords.add(record);
+                        }
+                        break;
+
+                    case "!=":
+                        if (!value.equals(_objValue)) {
+                            matchingRecords.add(record);
+                        }
+                        break;
+
+                    default:
+                        // throw an exception for unsupported operator
+                }
+            }
+            serialize(page);
+        }
+        return matchingRecords.iterator();
+    }
+
+    private static int compareValues(Object value1, Object value2) {
+        int x = 0;
+        if (value1 instanceof Integer && value2 instanceof Integer) {
+            x = ((Integer) value1).compareTo((Integer) value2);
+        } else if (value1 instanceof String && value2 instanceof String) {
+            x = ((String) value1).compareTo((String) value2);
+        } else if (value1 instanceof Date && value2 instanceof Date) {
+            x = ((Date) value1).compareTo((Date) value2);
+        } else if (value1 instanceof Double && value2 instanceof Double) {
+            x = ((Double) value1).compareTo((Double) value2);
+        } else {
+            // throw an exception for unsupported data type
+        }
+        return x;
+    }
+
+    public static void serialize(page page) {
         try {
             int id = page.getPageindex();
             String fileName = "src/main/resources/pages/" + page.getTableName() + "page_" + id + ".bin";
@@ -84,7 +196,7 @@ public class DBApp {
         }
     }
 
-    public page deserialize(Table table, int id) {
+    public static page deserialize(Table table, int id) {
         // check if the bin file exists
         String fileName = "src/main/resources/pages/" + table.getTable_name() + "page_" + id + ".bin";
         page page = null;
@@ -138,7 +250,7 @@ public class DBApp {
         return R.getValues().get(clusteringKeyName);
     }
 
-    public Table getTable(String strTableName) {
+    public static Table getTable(String strTableName) {
         return tables.get(strTableName);
     }
 
@@ -202,7 +314,7 @@ public class DBApp {
         record5.put("gpa", 1.2);
         record6.put("id", 6);
         record6.put("name", "mo");
-        record6.put("gpa", 1.2);
+        record6.put("gpa", 1.3);
 
         db.insertIntoTable(tableName, record3);
         db.insertIntoTable(tableName, record4);
@@ -210,7 +322,28 @@ public class DBApp {
         db.insertIntoTable(tableName, record2);
         db.insertIntoTable(tableName, record1);
         db.insertIntoTable(tableName, record5);
-        db.deleteFromTable(tableName, record4);
+        // db.deleteFromTable(tableName, record4);
+        // db.deleteFromTable(tableName, record1);
+        // db.deleteFromTable(tableName, record3);
+        // db.deleteFromTable(tableName, record6);
+        // db.deleteFromTable(tableName, record2);
+
+        SQLTerm[] arrSQLTerms = new SQLTerm[2];
+        arrSQLTerms[0] = new SQLTerm();
+        arrSQLTerms[0]._strTableName = "students";
+        arrSQLTerms[0]._strColumnName = "name";
+        arrSQLTerms[0]._strOperator = "=";
+        arrSQLTerms[0]._objValue = "santino";
+        arrSQLTerms[1] = new SQLTerm();
+        arrSQLTerms[1]._strTableName = "students";
+        arrSQLTerms[1]._strColumnName = "gpa";
+        arrSQLTerms[1]._strOperator = "=";
+        arrSQLTerms[1]._objValue = new Double(1.3);
+        String[] strarrOperators = new String[1];
+        strarrOperators[0] = "OR";
+        Iterator resultSet = DBApp.SearchInTable(arrSQLTerms[1]._strTableName,arrSQLTerms[1]._strColumnName,arrSQLTerms[1]._strOperator,arrSQLTerms[1]._objValue);
+        
+        System.out.println((Record)resultSet.next());
 
     }
 }

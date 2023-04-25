@@ -65,6 +65,7 @@ public class page implements Serializable {
 					recordsInPage.add(Recordindex, r);
 					// insert the newpage in the vector of pages in the table
 					Table.getPages().add(newPage);
+					newPage.setPageindex(Table.getPages().size());
 				} else {
 					// check for the first next empty page
 					int i = Pageindex + 1;
@@ -102,6 +103,9 @@ public class page implements Serializable {
 
 	private void updatePage(page p) {
 		p.setNumOfElem(p.recordsInPage.size());
+		if (p.getNumOfElem() == 0) {
+			p = null;
+		}
 		// update min and max
 		String clusteringkey = p.getRecords().get(0).getClusteringKeyName();
 		p.setMin((Comparable) recordsInPage.get(0).getValues().get(clusteringkey));
@@ -110,7 +114,6 @@ public class page implements Serializable {
 
 	public void delete(Record r) {
 		int Recordindex = binarySearch(r);
-		// shift all the record that are after the record i want to delete
 		recordsInPage.remove(Recordindex);
 		updatePage(this);
 	}
@@ -169,6 +172,10 @@ public class page implements Serializable {
 
 	public int getPageindex() {
 		return pageID;
+	}
+
+	public void setPageindex(int id) {
+		pageID = id;
 	}
 
 	// tosring method returns the table name and the number of elements in the page
