@@ -43,7 +43,6 @@ public class DBApp {
         if (page.getNumOfElem() > 0)
             deserialize(table, page.getPageindex());
         page.insert(record);
-        System.out.println(page.getRecords());
         serialize(page);
     }
 
@@ -66,7 +65,6 @@ public class DBApp {
         deserialize(tbl, p.getPageindex());
         p.delete(rec);
         System.out.println("Deleted successfully");
-        System.out.println(p.getRecords());
         serialize(p);
     }
 
@@ -78,16 +76,19 @@ public class DBApp {
         }
         Iterator result = null;
 
-        for (int i = 0; i < arrSQLTerms.length - 2; i++) {
+        for (int i = 0; i < arrSQLTerms.length - 1; i++) {
             SQLTerm term1 = arrSQLTerms[i];
             SQLTerm term2 = arrSQLTerms[i + 1];
             Iterator iterator1 = SearchInTable(term1.getTableName(), term1.getColumnName(), term1.getOperator(),
                     term1.getValue());
             Iterator iterator2 = SearchInTable(term2.getTableName(), term2.getColumnName(), term2.getOperator(),
                     term2.getValue());
-
-            result = intersectIterators(iterator1, iterator2);
-
+            if (strarrOperators[i].equals("AND"))
+                result = intersectIterators(iterator1, iterator2);
+            if (strarrOperators[i].equals("OR"))
+                result = unionIterators(iterator1, iterator2);
+            if (strarrOperators[i].equals("XOR"))
+                result = xORIterator(iterator1, iterator2);
         }
         return result;
 
@@ -95,11 +96,12 @@ public class DBApp {
 
     private static Iterator intersectIterators(Iterator iterator1, Iterator iterator2) {
         Vector<Record> intersectList = new Vector<Record>();
+
         while (iterator1.hasNext()) {
             Record tuple1 = (Record) iterator1.next();
             while (iterator2.hasNext()) {
                 Record tuple2 = (Record) iterator2.next();
-                if (tuple1.equals(tuple2)) {
+                if (tuple1.compareTo(tuple2) == 0) {
                     intersectList.add(tuple1);
                 }
             }
@@ -107,7 +109,41 @@ public class DBApp {
         return intersectList.iterator();
     }
 
-    private static Iterator SearchInTable(String TableName, String _strColumnName, String _strOperator, Object _objValue) {
+    private static Iterator unionIterators(Iterator iterator1, Iterator iterator2) {
+        Vector<Record> unionList = new Vector<Record>();
+        // union without duplicates
+        while (iterator1.hasNext()) {
+            Record tuple1 = (Record) iterator1.next();
+            unionList.add(tuple1);
+        }
+        for (int i = 0; i < unionList.size(); i++) {
+            while (iterator2.hasNext()) {
+                Record tuple2 = (Record) iterator2.next();
+                if (unionList.get(i).compareTo(tuple2) != 0) {
+                    unionList.add(tuple2);
+                }
+            }
+        }
+        return unionList.iterator();
+    }
+
+    private static Iterator xORIterator(Iterator iterator1, Iterator iterator2) {
+        Vector<Record> xORList = new Vector<Record>();
+        while (iterator1.hasNext()) {
+            Record tuple1 = (Record) iterator1.next();
+            while (iterator2.hasNext()) {
+                Record tuple2 = (Record) iterator2.next();
+                if (tuple1.compareTo(tuple2) != 0) {
+                    xORList.add(tuple1);
+                    xORList.add(tuple2);
+                }
+            }
+        }
+        return xORList.iterator();
+    }
+
+    private static Iterator SearchInTable(String TableName, String _strColumnName, String _strOperator,
+            Object _objValue) {
         Table table = getTable(TableName);
         Vector<Record> matchingRecords = new Vector<Record>();
         // loop on all pages
@@ -308,7 +344,7 @@ public class DBApp {
         record3.put("gpa", 1.2);
         record4.put("id", 4);
         record4.put("name", "beso");
-        record4.put("gpa", 1.2);
+        record4.put("gpa", 2.5);
         record5.put("id", 5);
         record5.put("name", "zoza");
         record5.put("gpa", 1.2);
@@ -337,13 +373,19 @@ public class DBApp {
         arrSQLTerms[1] = new SQLTerm();
         arrSQLTerms[1]._strTableName = "students";
         arrSQLTerms[1]._strColumnName = "gpa";
-        arrSQLTerms[1]._strOperator = "=";
-        arrSQLTerms[1]._objValue = new Double(1.3);
+        arrSQLTerms[1]._strOperator = ">=";
+        arrSQLTerms[1]._objValue = new Double(2.1);
         String[] strarrOperators = new String[1];
         strarrOperators[0] = "OR";
-        Iterator resultSet = DBApp.SearchInTable(arrSQLTerms[1]._strTableName,arrSQLTerms[1]._strColumnName,arrSQLTerms[1]._strOperator,arrSQLTerms[1]._objValue);
-        
-        System.out.println((Record)resultSet.next());
+        Iterator resultSet = DBApp.SearchInTable(arrSQLTerms[1]._strTableName, arrSQLTerms[1]._strColumnName,
+                arrSQLTerms[1]._strOperator, arrSQLTerms[1]._objValue);
+        Iterator finalResult = DBApp.selectFromTable(arrSQLTerms, strarrOperators);
+
+        while (finalResult.hasNext()) {
+            int i = 0;
+            System.out.println(finalResult.next() + "" + i);
+            i++;
+        }
 
     }
 }

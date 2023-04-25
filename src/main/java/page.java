@@ -101,6 +101,8 @@ public class page implements Serializable {
 		updatePage(this);
 	}
 
+
+
 	private void updatePage(page p) {
 		p.setNumOfElem(p.recordsInPage.size());
 		if (p.getNumOfElem() == 0) {
