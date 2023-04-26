@@ -1,6 +1,7 @@
 package main.java;
 
 import java.io.BufferedReader;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
@@ -31,7 +32,7 @@ public class page implements Serializable {
 		pageID = Table.getPages().indexOf(this);
 		recordsInPage = new Vector<Record>();
 		NumOfElem = 0;
-		n = 200;
+		n = readMaxNumOfRows();
 	}
 
 	public static int binarySearch(Record r) {
@@ -51,45 +52,19 @@ public class page implements Serializable {
 		return low;
 	}
 
-	// public record binarySearchByKey(Comparable key) {
-	// int low = 0;
-	// int high = NumOfElem - 1;
-	// int mid = 0;
-	// while (low <= high) {
-	// mid = (low + high) / 2;
-	// if
-	// (((Comparable)recordsInPage.get(mid).getClusteringKeyValue().compareTo((Comparable)key))
-	// < 0) {
-	// low = mid + 1;
-	// } else if
-	// (recordsInPage.get(mid).getClusteringKeyValue().compareTo((Comparable)key) >
-	// 0) {
-	// high = mid - 1;
-	// } else {
-	// return recordsInPage.get(mid);
-	// }
-	// }
-	// return recordsInPage.get(low);
-	// }
-
 	private int readMaxNumOfRows() {
-		Properties props = new Properties();
-		InputStream inputStream = getClass().getClassLoader().getResourceAsStream("src/main/resources/DBApp.config");
+		Properties config = new Properties();
+		FileInputStream inConfig = null;
 		try {
-			props.load(inputStream);
-		} catch (IOException e) {
+			inConfig = new FileInputStream("src/main/resources/DBApp.config");
+			config.load(inConfig);
+			inConfig.close();
+		} catch (IOException e5) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			e5.printStackTrace();
 		}
-		String maxRowsStr = props.getProperty("MaximumRowsCountinTablePage");
-		int maxRows = Integer.parseInt(maxRowsStr);
-		try {
-			inputStream.close();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return maxRows;
+		int MaxRows = Integer.parseInt(config.getProperty("MaximumRowsCountinTablePage"));
+        return MaxRows;
 	}
 
 	// insert record in page sorted and then update min and max and create new page
@@ -153,11 +128,8 @@ public class page implements Serializable {
 	public static void update(Record r, Hashtable<String, Object> values) throws Exception {
 		int location = binarySearch(r);
 		Record toBeUptaded = recordsInPage.get(location);
-		System.out.println("the record to be updated is " + toBeUptaded + "by " + values);
-
 		for (String key : values.keySet()) {
 			toBeUptaded.updateValue(key, values.get(key));
-			System.out.println("the record after update is " + toBeUptaded.getValues());
 		}
 
 	}
