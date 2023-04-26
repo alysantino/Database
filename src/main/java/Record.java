@@ -13,11 +13,21 @@ public class Record extends Hashtable<String, Object> implements Comparable<Reco
     private Object ClusteringKeyValue;
     private String ClusteringKeyName;
 
-    public Record(Hashtable<String, Object> values, String ClusteringKeyType) {
+    public Record(Hashtable<String, Object> values, String ClusteringKeyType,Table table) {
         super();
         this.values = values;
         this.ClusteringKeyType = ClusteringKeyType;
+        try {
+            this.ClusteringKeyName = DBApp.getClusteringKeyName(table.getTable_name());
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
 
+    }
+    //update the value of a specific column
+    public void updateValue(String columnName, Object value) {
+        values.put(columnName, value);
     }
 
     public Hashtable<String, Object> getValues() {
