@@ -6,7 +6,7 @@ import java.util.*;
 
 public class DBApp {
 
-    private static Hashtable<String, Table> tables;
+    private  Hashtable<String, Table> tables;
 
     public DBApp() {
     }
@@ -29,21 +29,24 @@ public class DBApp {
     public void insertIntoTable(String strTableName,
             Hashtable<String, Object> htblColNameValue) throws DBAppException, IOException {
         String clusteringKeyType = getClusteringKeyType(strTableName);
-        if (clusteringKeyType == null) {
-            throw new DBAppException("No clustering key found for the table");
-        }
         Record record = new Record(htblColNameValue, clusteringKeyType, getTable(strTableName));
         record.setClusteringKeyName(getClusteringKeyName(strTableName));
         record.setClusteringKeyValue(getClusteringKeyValue(record, strTableName));
+        checkRecordEntries(record, strTableName);
         Table table = getTable(strTableName);
+        if (clusteringKeyType == null) {
+            throw new DBAppException("No clustering key found for the table");
+        }
         if (table == null) {
             throw new DBAppException("No table found with the name " + strTableName);
         }
         Comparable ClusteringKeyValue = (Comparable) getClusteringKeyValue(record, strTableName);
         page page = getPage(table, ClusteringKeyValue);
+        System.out.println("the Page is " + page + "  " + record.getValues());
         if (page.getNumOfElem() > 0)
             deserialize(table, page.getPageindex());
         page.insert(record);
+        page.updatePage(page);
         serialize(page);
     }
 
@@ -57,7 +60,7 @@ public class DBApp {
         if (clusteringKeyType == null) {
             throw new DBAppException("No clustering key found for the table");
         }
-        Record rec = new Record(htblColNameValue, clusteringKeyType,getTable(strTableName));
+        Record rec = new Record(htblColNameValue, clusteringKeyType, getTable(strTableName));
         rec.setClusteringKeyName(getClusteringKeyName(strTableName));
         rec.setClusteringKeyValue(getClusteringKeyValue(rec, strTableName));
 
@@ -69,7 +72,8 @@ public class DBApp {
         serialize(p);
     }
 
-    public static void updateTable(String strTableName, String strClusteringKeyValue, Hashtable<String, Object> htblColNameValue) throws Throwable {
+    public void updateTable(String strTableName, String strClusteringKeyValue,
+            Hashtable<String, Object> htblColNameValue) throws Throwable {
         Table table = getTable(strTableName);
         if (table == null) {
             throw new DBAppException("No table found with the name " + strTableName);
@@ -80,31 +84,29 @@ public class DBApp {
         }
         String clusteringKeyName = getClusteringKeyName(strTableName);
         Hashtable<String, Object> clusteringKey = new Hashtable<String, Object>();
-        if(getClusteringKeyType(strTableName).equals("java.lang.Integer")){
-            int index = Integer.parseInt(strClusteringKeyValue) ;
+        if (getClusteringKeyType(strTableName).equals("java.lang.Integer")) {
+            int index = Integer.parseInt(strClusteringKeyValue);
             clusteringKey.put(clusteringKeyName, index);
-        }else if(getClusteringKeyType(strTableName).equals("java.lang.Double")){
+        } else if (getClusteringKeyType(strTableName).equals("java.lang.Double")) {
             Double index = Double.parseDouble(strClusteringKeyValue);
             clusteringKey.put(clusteringKeyName, index);
-        }else if(getClusteringKeyType(strTableName).equals("java.util.Date")){
+        } else if (getClusteringKeyType(strTableName).equals("java.util.Date")) {
             Date index = new SimpleDateFormat("yyyy-MM-dd").parse(strClusteringKeyValue);
             clusteringKey.put(clusteringKeyName, index);
-        }
-        else{
+        } else {
             clusteringKey.put(clusteringKeyName, strClusteringKeyValue);
         }
-        Record record = new Record(clusteringKey, clusteringKeyType,getTable(strTableName));
+        Record record = new Record(clusteringKey, clusteringKeyType, getTable(strTableName));
         System.out.println("Record: " + clusteringKey);
-        page page = getPage(table,(Comparable) getClusteringKeyValue(record, strTableName));
+        page page = getPage(table, (Comparable) getClusteringKeyValue(record, strTableName));
         int index = page.getPageindex();
         deserialize(table, index);
         page.update(record, htblColNameValue);
         serialize(page);
-        
 
     }
 
-    public static Iterator selectFromTable(SQLTerm[] arrSQLTerms, String[] strarrOperators)
+    public  Iterator selectFromTable(SQLTerm[] arrSQLTerms, String[] strarrOperators)
             throws DBAppException {
         // check if the array of terms and operators are valid
         if (arrSQLTerms.length != strarrOperators.length + 1) {
@@ -178,8 +180,8 @@ public class DBApp {
         return xORList.iterator();
     }
 
-    private static Iterator SearchInTable(String TableName, String _strColumnName, String _strOperator,
-            Object _objValue) {
+    private  Iterator SearchInTable(String TableName, String _strColumnName, String _strOperator,
+            Object _objValue) throws DBAppException {
         Table table = getTable(TableName);
         Vector<Record> matchingRecords = new Vector<Record>();
         // loop on all pages
@@ -229,7 +231,7 @@ public class DBApp {
                         break;
 
                     default:
-                        // throw an exception for unsupported operator
+                        throw new DBAppException("Invalid operator");
                 }
             }
             serialize(page);
@@ -237,7 +239,7 @@ public class DBApp {
         return matchingRecords.iterator();
     }
 
-    private static int compareValues(Object value1, Object value2) {
+    private static int compareValues(Object value1, Object value2) throws DBAppException {
         int x = 0;
         if (value1 instanceof Integer && value2 instanceof Integer) {
             x = ((Integer) value1).compareTo((Integer) value2);
@@ -248,7 +250,7 @@ public class DBApp {
         } else if (value1 instanceof Double && value2 instanceof Double) {
             x = ((Double) value1).compareTo((Double) value2);
         } else {
-            // throw an exception for unsupported data type
+            throw new DBAppException("Invalid data type");
         }
         return x;
     }
@@ -291,7 +293,7 @@ public class DBApp {
 
     }
 
-    private static String getClusteringKeyType(String strTableName) throws IOException {
+    private  String getClusteringKeyType(String strTableName) throws IOException {
         BufferedReader reader = new BufferedReader(new FileReader("src/main/resources/MetaData.csv"));
         String line;
         while ((line = reader.readLine()) != null) {
@@ -322,7 +324,7 @@ public class DBApp {
         return R.getValues().get(clusteringKeyName);
     }
 
-    public static Table getTable(String strTableName) {
+    public  Table getTable(String strTableName) {
         return tables.get(strTableName);
     }
 
@@ -332,13 +334,59 @@ public class DBApp {
         if (table.getPages().size() == 0)
             return new page(table);
         page page = table.getPages().get(0);
+        if (id.compareTo(page.getMin()) < 0) {
+            return page;
+        }
+        if (id.compareTo(table.getPages().get(table.getPages().size() - 1).getMax()) > 0) {
+            return table.getPages().get(table.getPages().size() - 1);
+        }
+        System.out.println(page.minValueInPage + " " + page.maxValueInPage + " " + id + " get page ");
+        System.out.println(page);
         for (int i = 0; i < table.getPages().size(); i++) {
-            if (id.compareTo(table.getPages().get(i).getMin()) > 0
-                    && id.compareTo(table.getPages().get(i).getMax()) < 0) {
+            if (id.compareTo(table.getPages().get(i).minValueInPage) > 0
+                    && id.compareTo(table.getPages().get(i).maxValueInPage) < 0) {
                 page = table.getPages().get(i);
+                return page;
             }
         }
         return page;
+    }
+
+    private static boolean checkRecordEntries(Record r, String strTableName) throws IOException {
+        BufferedReader reader = new BufferedReader(new FileReader("src/main/resources/MetaData.csv"));
+        String line;
+        while ((line = reader.readLine()) != null) {
+            String[] parts = line.split(",");
+            if (parts[0].equals(strTableName)) {
+                if (parts[2].equals("java.lang.Integer")) {
+                    if (!(r.getValues().get(parts[1]) instanceof Integer)) {
+                        reader.close();
+                        return false;
+                    }
+                } else if (parts[2].equals("java.lang.String")) {
+                    if (!(r.getValues().get(parts[1]) instanceof String)) {
+                        reader.close();
+                        return false;
+                    }
+                } else if (parts[2].equals("java.lang.Double")) {
+                    if (!(r.getValues().get(parts[1]) instanceof Double)) {
+                        reader.close();
+                        return false;
+                    }
+                } else if (parts[2].equals("java.util.Date")) {
+                    if (!(r.getValues().get(parts[1]) instanceof Date)) {
+                        reader.close();
+                        return false;
+                    }
+                } else {
+                    reader.close();
+                    return false;
+                }
+            }
+        }
+        reader.close();
+        System.out.println("Record entries are valid");
+        return true;
     }
 
     public static void main(String[] args) throws DBAppException, IOException {
@@ -386,15 +434,15 @@ public class DBApp {
         record5.put("gpa", 1.2);
         record6.put("id", 6);
         record6.put("name", "mo");
-        record6.put("gpa", 1.3);
-
+        record6.put("gpa", 1);
 
         db.insertIntoTable(tableName, record3);
         db.insertIntoTable(tableName, record4);
-        db.insertIntoTable(tableName, record6);
-        db.insertIntoTable(tableName, record2);
         db.insertIntoTable(tableName, record1);
+        db.insertIntoTable(tableName, record2);
+        db.insertIntoTable(tableName, record6);
         db.insertIntoTable(tableName, record5);
+        // System.out.print(db.checkRecordEntries((Record)record1, "students"));
         // db.deleteFromTable(tableName, record4);
         // db.deleteFromTable(tableName, record1);
         // db.deleteFromTable(tableName, record3);
@@ -403,14 +451,13 @@ public class DBApp {
         Hashtable<String, Object> values = new Hashtable<>();
         values.put("gpa", new Double(1.5));
         try {
-            updateTable("students","4",values);
+            updateTable("students", "4", values);
         } catch (Throwable e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
 
-
-        //print the table records
+        // print the table records
         System.out.println("Table " + tableName + " records:");
         for (int i = 0; i < table.getPages().size(); i++) {
             page page = table.getPages().get(i);
@@ -432,16 +479,15 @@ public class DBApp {
         arrSQLTerms[1]._strOperator = ">=";
         arrSQLTerms[1]._objValue = new Double(2.1);
         String[] strarrOperators = new String[1];
-        // strarrOperators[0] = "OR";
+        strarrOperators[0] = "OR";
         // Iterator resultSet = DBApp.SearchInTable(arrSQLTerms[1]._strTableName, arrSQLTerms[1]._strColumnName,
         //         arrSQLTerms[1]._strOperator, arrSQLTerms[1]._objValue);
         // Iterator finalResult = DBApp.selectFromTable(arrSQLTerms, strarrOperators);
 
         // while (finalResult.hasNext()) {
-        //     int i = 0;
-        //     System.out.println(finalResult.next() + "" + i);
-        //     i++;
+        // int i = 0;
+        // System.out.println(finalResult.next());
+        // i++;
         // }
-
     }
 }

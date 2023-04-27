@@ -62,4 +62,12 @@ public class Table implements Serializable {
     public void setTable_name(String table_name) {
         this.strTableName = table_name;
     }
+    //print all pages in the table in a tostring method
+    public String toString() {
+        String s = "";
+        for (int i = 0; i < pages.size(); i++) {
+            s += pages.get(i).toString();
+        }
+        return s;
+    }
 }
