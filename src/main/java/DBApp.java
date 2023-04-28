@@ -6,7 +6,7 @@ import java.util.*;
 
 public class DBApp {
 
-    private  Hashtable<String, Table> tables;
+    private Hashtable<String, Table> tables;
 
     public DBApp() {
     }
@@ -32,7 +32,7 @@ public class DBApp {
         Record record = new Record(htblColNameValue, clusteringKeyType, getTable(strTableName));
         record.setClusteringKeyName(getClusteringKeyName(strTableName));
         record.setClusteringKeyValue(getClusteringKeyValue(record, strTableName));
-        checkRecordEntries(record, strTableName);
+
         Table table = getTable(strTableName);
         if (clusteringKeyType == null) {
             throw new DBAppException("No clustering key found for the table");
@@ -42,11 +42,12 @@ public class DBApp {
         }
         Comparable ClusteringKeyValue = (Comparable) getClusteringKeyValue(record, strTableName);
         page page = getPage(table, ClusteringKeyValue);
-        System.out.println("the Page is " + page + "  " + record.getValues());
         if (page.getNumOfElem() > 0)
             deserialize(table, page.getPageindex());
+        if(checkRecordEntries(record, strTableName)==false)
+            throw new DBAppException("Record entries are not valid " + record);
         page.insert(record);
-        page.updatePage(page);
+        table.updateTable();
         serialize(page);
     }
 
@@ -97,16 +98,15 @@ public class DBApp {
             clusteringKey.put(clusteringKeyName, strClusteringKeyValue);
         }
         Record record = new Record(clusteringKey, clusteringKeyType, getTable(strTableName));
-        System.out.println("Record: " + clusteringKey);
         page page = getPage(table, (Comparable) getClusteringKeyValue(record, strTableName));
         int index = page.getPageindex();
         deserialize(table, index);
         page.update(record, htblColNameValue);
         serialize(page);
-
+        table.updateTable();
     }
 
-    public  Iterator selectFromTable(SQLTerm[] arrSQLTerms, String[] strarrOperators)
+    public Iterator selectFromTable(SQLTerm[] arrSQLTerms, String[] strarrOperators)
             throws DBAppException {
         // check if the array of terms and operators are valid
         if (arrSQLTerms.length != strarrOperators.length + 1) {
@@ -132,7 +132,7 @@ public class DBApp {
 
     }
 
-    private static Iterator intersectIterators(Iterator iterator1, Iterator iterator2) {
+    private Iterator intersectIterators(Iterator iterator1, Iterator iterator2) {
         Vector<Record> intersectList = new Vector<Record>();
 
         while (iterator1.hasNext()) {
@@ -147,7 +147,7 @@ public class DBApp {
         return intersectList.iterator();
     }
 
-    private static Iterator unionIterators(Iterator iterator1, Iterator iterator2) {
+    private Iterator unionIterators(Iterator iterator1, Iterator iterator2) {
         Vector<Record> unionList = new Vector<Record>();
         // union without duplicates
         while (iterator1.hasNext()) {
@@ -165,7 +165,7 @@ public class DBApp {
         return unionList.iterator();
     }
 
-    private static Iterator xORIterator(Iterator iterator1, Iterator iterator2) {
+    private Iterator xORIterator(Iterator iterator1, Iterator iterator2) {
         Vector<Record> xORList = new Vector<Record>();
         while (iterator1.hasNext()) {
             Record tuple1 = (Record) iterator1.next();
@@ -180,7 +180,7 @@ public class DBApp {
         return xORList.iterator();
     }
 
-    private  Iterator SearchInTable(String TableName, String _strColumnName, String _strOperator,
+    private Iterator SearchInTable(String TableName, String _strColumnName, String _strOperator,
             Object _objValue) throws DBAppException {
         Table table = getTable(TableName);
         Vector<Record> matchingRecords = new Vector<Record>();
@@ -239,7 +239,7 @@ public class DBApp {
         return matchingRecords.iterator();
     }
 
-    private static int compareValues(Object value1, Object value2) throws DBAppException {
+    private int compareValues(Object value1, Object value2) throws DBAppException {
         int x = 0;
         if (value1 instanceof Integer && value2 instanceof Integer) {
             x = ((Integer) value1).compareTo((Integer) value2);
@@ -255,7 +255,7 @@ public class DBApp {
         return x;
     }
 
-    public static void serialize(page page) {
+    public void serialize(page page) {
         try {
             int id = page.getPageindex();
             String fileName = "src/main/resources/pages/" + page.getTableName() + "page_" + id + ".bin";
@@ -270,7 +270,7 @@ public class DBApp {
         }
     }
 
-    public static page deserialize(Table table, int id) {
+    public page deserialize(Table table, int id) {
         // check if the bin file exists
         String fileName = "src/main/resources/pages/" + table.getTable_name() + "page_" + id + ".bin";
         page page = null;
@@ -293,7 +293,7 @@ public class DBApp {
 
     }
 
-    private  String getClusteringKeyType(String strTableName) throws IOException {
+    private String getClusteringKeyType(String strTableName) throws IOException {
         BufferedReader reader = new BufferedReader(new FileReader("src/main/resources/MetaData.csv"));
         String line;
         while ((line = reader.readLine()) != null) {
@@ -306,7 +306,7 @@ public class DBApp {
         return null; // no clustering key found for the table
     }
 
-    static String getClusteringKeyName(String strTableName) throws IOException {
+    public static String getClusteringKeyName(String strTableName) throws IOException {
         BufferedReader reader = new BufferedReader(new FileReader("src/main/resources/MetaData.csv"));
         String line;
         while ((line = reader.readLine()) != null) {
@@ -319,40 +319,42 @@ public class DBApp {
         return null; // no clustering key found for the table
     }
 
-    private static Object getClusteringKeyValue(Record R, String strTableName) throws IOException {
+    private Object getClusteringKeyValue(Record R, String strTableName) throws IOException {
         String clusteringKeyName = getClusteringKeyName(strTableName);
         return R.getValues().get(clusteringKeyName);
     }
 
-    public  Table getTable(String strTableName) {
+    public Table getTable(String strTableName) {
         return tables.get(strTableName);
     }
 
-    private static page getPage(Table table, Comparable id) {
-        // get the page from the vector of pages in the table where id is between the
-        // min and max of the page
+    private page getPage(Table table, Comparable id) throws IOException {
         if (table.getPages().size() == 0)
             return new page(table);
         page page = table.getPages().get(0);
+        page lastPage = table.getPages().get(table.getPages().size() - 1);
         if (id.compareTo(page.getMin()) < 0) {
             return page;
         }
-        if (id.compareTo(table.getPages().get(table.getPages().size() - 1).getMax()) > 0) {
-            return table.getPages().get(table.getPages().size() - 1);
+        if (id.compareTo(lastPage.getMax()) > 0) {
+            return lastPage;
         }
-        System.out.println(page.minValueInPage + " " + page.maxValueInPage + " " + id + " get page ");
-        System.out.println(page);
         for (int i = 0; i < table.getPages().size(); i++) {
-            if (id.compareTo(table.getPages().get(i).minValueInPage) > 0
-                    && id.compareTo(table.getPages().get(i).maxValueInPage) < 0) {
-                page = table.getPages().get(i);
-                return page;
+            page currPage = table.getPages().get(i);
+            Comparable min = (Comparable) currPage.getMin();
+            Comparable max = (Comparable) currPage.getMax();
+            if (currPage.getRecords().size() == currPage.getN())
+                continue;
+            if (currPage.getRecords().size() == 1 && (id.compareTo(min) < 0 || id.compareTo(max) > 0))
+                return currPage;
+            if (id.compareTo(min) > 0 && id.compareTo(max) < 0) {
+                return currPage;
             }
         }
         return page;
     }
 
-    private static boolean checkRecordEntries(Record r, String strTableName) throws IOException {
+    private boolean checkRecordEntries(Record r, String strTableName) throws IOException {
         BufferedReader reader = new BufferedReader(new FileReader("src/main/resources/MetaData.csv"));
         String line;
         while ((line = reader.readLine()) != null) {
@@ -369,7 +371,9 @@ public class DBApp {
                         return false;
                     }
                 } else if (parts[2].equals("java.lang.Double")) {
+
                     if (!(r.getValues().get(parts[1]) instanceof Double)) {
+                        System.out.println((r.getValues().get(parts[1]) instanceof Double));
                         reader.close();
                         return false;
                     }
@@ -389,7 +393,7 @@ public class DBApp {
         return true;
     }
 
-    public static void main(String[] args) throws DBAppException, IOException {
+    public static void main(String[] args) throws Throwable {
         DBApp db = new DBApp();
         db.init();
         // create a new table
@@ -431,10 +435,13 @@ public class DBApp {
         record4.put("gpa", 2.5);
         record5.put("id", 5);
         record5.put("name", "zoza");
-        record5.put("gpa", 1.2);
+        record5.put("gpa", 3.2);
         record6.put("id", 6);
         record6.put("name", "mo");
-        record6.put("gpa", 1);
+        record6.put("gpa", 1.2);
+
+        // Record r5 = new Record(record5,db.getClusteringKeyType(table.getTable_name()),table);
+        // db.checkRecordEntries(r5, tableName);
 
         db.insertIntoTable(tableName, record3);
         db.insertIntoTable(tableName, record4);
@@ -442,20 +449,18 @@ public class DBApp {
         db.insertIntoTable(tableName, record2);
         db.insertIntoTable(tableName, record6);
         db.insertIntoTable(tableName, record5);
-        // System.out.print(db.checkRecordEntries((Record)record1, "students"));
-        // db.deleteFromTable(tableName, record4);
-        // db.deleteFromTable(tableName, record1);
+
+        db.deleteFromTable(tableName, record4);
+        db.deleteFromTable(tableName, record1);
         // db.deleteFromTable(tableName, record3);
         // db.deleteFromTable(tableName, record6);
         // db.deleteFromTable(tableName, record2);
         Hashtable<String, Object> values = new Hashtable<>();
-        values.put("gpa", new Double(1.5));
-        try {
-            updateTable("students", "4", values);
-        } catch (Throwable e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
+        values.put("gpa", new Double(2.8));
+        String strTableName = "students";
+        String id = "3";
+
+        db.updateTable(strTableName, id, values);
 
         // print the table records
         System.out.println("Table " + tableName + " records:");
@@ -472,22 +477,23 @@ public class DBApp {
         arrSQLTerms[0]._strTableName = "students";
         arrSQLTerms[0]._strColumnName = "name";
         arrSQLTerms[0]._strOperator = "=";
-        arrSQLTerms[0]._objValue = "santino";
+        arrSQLTerms[0]._objValue = "mo";
         arrSQLTerms[1] = new SQLTerm();
         arrSQLTerms[1]._strTableName = "students";
         arrSQLTerms[1]._strColumnName = "gpa";
-        arrSQLTerms[1]._strOperator = ">=";
+        arrSQLTerms[1]._strOperator = ">";
         arrSQLTerms[1]._objValue = new Double(2.1);
         String[] strarrOperators = new String[1];
         strarrOperators[0] = "OR";
-        // Iterator resultSet = DBApp.SearchInTable(arrSQLTerms[1]._strTableName, arrSQLTerms[1]._strColumnName,
-        //         arrSQLTerms[1]._strOperator, arrSQLTerms[1]._objValue);
-        // Iterator finalResult = DBApp.selectFromTable(arrSQLTerms, strarrOperators);
+        Iterator resultSet = db.SearchInTable(arrSQLTerms[1]._strTableName,
+        arrSQLTerms[1]._strColumnName,
+        arrSQLTerms[1]._strOperator, arrSQLTerms[1]._objValue);
+        Iterator finalResult = db.selectFromTable(arrSQLTerms, strarrOperators);
 
-        // while (finalResult.hasNext()) {
-        // int i = 0;
-        // System.out.println(finalResult.next());
-        // i++;
-        // }
+        while (finalResult.hasNext()) {
+        int i = 0;
+        System.out.println(finalResult.next());
+        i++;
+        }
     }
 }

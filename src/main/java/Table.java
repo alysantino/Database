@@ -15,8 +15,8 @@ public class Table implements Serializable {
     Hashtable<String, String> htblColNameMin;
     Hashtable<String, String> htblColNameMax;
 
-    public Table(String strTableName, String strClusteringKeyColumn, Hashtable<String, String>  htblColNameType,
-            Hashtable<String, String> htblColNameMin, Hashtable<String, String>  htblColNameMax) throws IOException {
+    public Table(String strTableName, String strClusteringKeyColumn, Hashtable<String, String> htblColNameType,
+            Hashtable<String, String> htblColNameMin, Hashtable<String, String> htblColNameMax) throws IOException {
         super();
         this.pages = new Vector<page>();
         this.strTableName = strTableName;
@@ -49,20 +49,37 @@ public class Table implements Serializable {
         fw.close();
 
     }
+
+    public void updateTable() {
+        for (int i = 0; i < pages.size(); i++) {
+            page p = pages.get(i);
+            p.setNumOfElem(p.getRecords().size());
+            if (p.getNumOfElem() == 0) {
+                p = null;
+            }
+            p.setMin((Comparable) p.getRecords().get(0).getValues().get(strClusteringKeyColumn));
+            p.setMax((Comparable) p.getRecords().get(p.getRecords().size() - 1).getValues().get(strClusteringKeyColumn));
+        }
+    }
+
     public Vector<page> getPages() {
         return pages;
     }
+
     public void addToPages(page page) {
         this.pages.add(page);
     }
+
     // get and set table name
     public String getTable_name() {
         return strTableName;
     }
+
     public void setTable_name(String table_name) {
         this.strTableName = table_name;
     }
-    //print all pages in the table in a tostring method
+
+    // print all pages in the table in a tostring method
     public String toString() {
         String s = "";
         for (int i = 0; i < pages.size(); i++) {
