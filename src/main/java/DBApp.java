@@ -44,11 +44,38 @@ public class DBApp {
         page page = getPage(table, ClusteringKeyValue);
         if (page.getNumOfElem() > 0)
             deserialize(table, page.getPageindex());
-        if(checkRecordEntries(record, strTableName)==false)
+        if (checkRecordEntries(record, strTableName) == false)
             throw new DBAppException("Record entries are not valid " + record);
         page.insert(record);
         table.updateTable();
         serialize(page);
+    }
+
+    // following method could be used to delete one or more rows.
+    // htblColNameValue holds the key and value. This will be used in search
+    // to identify which rows/tuples to delete.
+    // htblColNameValue enteries are ANDED together
+    public void deleteFromTable1(String strTableName, Hashtable<String, Object> htblColNameValue)
+            throws DBAppException, IOException {
+        Table table = getTable(strTableName);
+        if (table == null) {
+            throw new DBAppException("No table found with the name " + strTableName);
+        }
+        for(int i =0;i<table.getPages().size();i++){
+            for(int j=0;j<table.getPages().get(i).getRecords().size();j++){
+                Record record = table.getPages().get(i).getRecords().get(j);
+                System.out.println(record.getValues());
+                if(record.containsValues(htblColNameValue)==true){
+                    table.getPages().get(i).getRecords().remove(j);
+                    j--;
+                    if(table.getPages().get(i).getNumOfElem()==0){
+                        table.getPages().remove(i);
+                    }
+                }
+            }
+            if(table.getPages().get(i).getRecords().size()!=0)
+                 table.getPages().get(i).updatePage();
+        }       
     }
 
     public void deleteFromTable(String strTableName, Hashtable<String, Object> htblColNameValue)
@@ -343,7 +370,7 @@ public class DBApp {
             page currPage = table.getPages().get(i);
             Comparable min = (Comparable) currPage.getMin();
             Comparable max = (Comparable) currPage.getMax();
-            if (currPage.getRecords().size() == currPage.getN())
+            if (currPage.getRecords().size() == currPage.getN() && id.compareTo(max) > 0)
                 continue;
             if (currPage.getRecords().size() == 1 && (id.compareTo(min) < 0 || id.compareTo(max) > 0))
                 return currPage;
@@ -428,30 +455,36 @@ public class DBApp {
         record2.put("name", "santino");
         record2.put("gpa", 2.1);
         record3.put("id", 3);
-        record3.put("name", "sheko");
+        record3.put("name", "beso");
         record3.put("gpa", 1.2);
         record4.put("id", 4);
         record4.put("name", "beso");
         record4.put("gpa", 2.5);
         record5.put("id", 5);
-        record5.put("name", "zoza");
+        record5.put("name", "beso");
         record5.put("gpa", 3.2);
         record6.put("id", 6);
-        record6.put("name", "mo");
+        record6.put("name", "beso");
         record6.put("gpa", 1.2);
 
-        // Record r5 = new Record(record5,db.getClusteringKeyType(table.getTable_name()),table);
+        // Record r5 = new
+        // Record(record5,db.getClusteringKeyType(table.getTable_name()),table);
         // db.checkRecordEntries(r5, tableName);
 
         db.insertIntoTable(tableName, record3);
         db.insertIntoTable(tableName, record4);
         db.insertIntoTable(tableName, record1);
-        db.insertIntoTable(tableName, record2);
-        db.insertIntoTable(tableName, record6);
         db.insertIntoTable(tableName, record5);
+        db.insertIntoTable(tableName, record6);
+        db.insertIntoTable(tableName, record2);
 
-        db.deleteFromTable(tableName, record4);
-        db.deleteFromTable(tableName, record1);
+        Hashtable<String, Object> delete = new Hashtable<>();
+        delete.put("name", "beso");
+        Record record11=new Record(record1,"java.lang.Integer", table);
+
+        System.out.println(record11.containsValues(delete));
+        db.deleteFromTable1(tableName, delete);
+        // db.deleteFromTable(tableName, record1);
         // db.deleteFromTable(tableName, record3);
         // db.deleteFromTable(tableName, record6);
         // db.deleteFromTable(tableName, record2);
@@ -460,7 +493,7 @@ public class DBApp {
         String strTableName = "students";
         String id = "3";
 
-        db.updateTable(strTableName, id, values);
+        // db.updateTable(strTableName, id, values);
 
         // print the table records
         System.out.println("Table " + tableName + " records:");
@@ -468,7 +501,7 @@ public class DBApp {
             page page = table.getPages().get(i);
             for (int j = 0; j < page.getRecords().size(); j++) {
                 Record record = page.getRecords().get(j);
-                System.out.println(record.getValues());
+                System.out.println(record.getValues() + " page min: " + page.getMin() + " page max: " + page.getMax());
             }
         }
 
@@ -485,15 +518,15 @@ public class DBApp {
         arrSQLTerms[1]._objValue = new Double(2.1);
         String[] strarrOperators = new String[1];
         strarrOperators[0] = "OR";
-        Iterator resultSet = db.SearchInTable(arrSQLTerms[1]._strTableName,
-        arrSQLTerms[1]._strColumnName,
-        arrSQLTerms[1]._strOperator, arrSQLTerms[1]._objValue);
-        Iterator finalResult = db.selectFromTable(arrSQLTerms, strarrOperators);
+        // Iterator resultSet = db.SearchInTable(arrSQLTerms[1]._strTableName,
+        //         arrSQLTerms[1]._strColumnName,
+        //         arrSQLTerms[1]._strOperator, arrSQLTerms[1]._objValue);
+        // Iterator finalResult = db.selectFromTable(arrSQLTerms, strarrOperators);
 
-        while (finalResult.hasNext()) {
-        int i = 0;
-        System.out.println(finalResult.next());
-        i++;
-        }
+        // while (finalResult.hasNext()) {
+        //     int i = 0;
+        //     System.out.println(finalResult.next());
+        //     i++;
+        // }
     }
 }

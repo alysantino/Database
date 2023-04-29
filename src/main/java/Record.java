@@ -13,7 +13,7 @@ public class Record extends Hashtable<String, Object> implements Comparable<Reco
     private Object ClusteringKeyValue;
     private String ClusteringKeyName;
 
-    public Record(Hashtable<String, Object> values, String ClusteringKeyType,Table table) {
+    public Record(Hashtable<String, Object> values, String ClusteringKeyType, Table table) {
         super();
         this.values = values;
         this.ClusteringKeyType = ClusteringKeyType;
@@ -25,9 +25,28 @@ public class Record extends Hashtable<String, Object> implements Comparable<Reco
         }
 
     }
-    //update the value of a specific column
+
+    // update the value of a specific column
     public void updateValue(String columnName, Object value) {
         values.put(columnName, value);
+    }
+
+    public boolean containsValues(Hashtable<String, Object> values) {
+        // check if this record contains the values in the hashtable
+        System.out.println("contains");
+        boolean contains = true;
+        for (String key : values.keySet()) {
+            System.out.println(this.values.get(key)+" "+ values.get(key));
+            if (!this.values.get(key).equals(values.get(key))) {
+                contains= false;
+                break;
+            } else {
+                contains= true;
+                break;
+            }
+        }
+        return contains;
+
     }
 
     public Hashtable<String, Object> getValues() {
@@ -37,13 +56,17 @@ public class Record extends Hashtable<String, Object> implements Comparable<Reco
     @Override
     public int compareTo(Record R) {
         if (this.ClusteringKeyType.equals("java.lang.Integer")) {
-            return ((Integer) this.getValues().get(this.getClusteringKeyName())).compareTo((Integer) R.getValues().get(R.getClusteringKeyName()));
+            return ((Integer) this.getValues().get(this.getClusteringKeyName()))
+                    .compareTo((Integer) R.getValues().get(R.getClusteringKeyName()));
         } else if (this.ClusteringKeyType.equals("java.lang.Double")) {
-            return ((Double) this.getValues().get(this.getClusteringKeyName())).compareTo((Double) R.getValues().get(R.getClusteringKeyName()));
+            return ((Double) this.getValues().get(this.getClusteringKeyName()))
+                    .compareTo((Double) R.getValues().get(R.getClusteringKeyName()));
         } else if (this.ClusteringKeyType.equals("java.lang.String")) {
-            return ((String) this.getValues().get(this.getClusteringKeyName())).compareTo((String) R.getValues().get(R.getClusteringKeyName()));
+            return ((String) this.getValues().get(this.getClusteringKeyName()))
+                    .compareTo((String) R.getValues().get(R.getClusteringKeyName()));
         } else if (this.ClusteringKeyType.equals("java.util.Date")) {
-            return ((Date) this.getValues().get(this.getClusteringKeyName())).compareTo((Date) R.getValues().get(R.getClusteringKeyName()));
+            return ((Date) this.getValues().get(this.getClusteringKeyName()))
+                    .compareTo((Date) R.getValues().get(R.getClusteringKeyName()));
         }
         return 0;
     }
@@ -74,11 +97,12 @@ public class Record extends Hashtable<String, Object> implements Comparable<Reco
         }
         return s;
     }
+
     // getters and setters
     public String getClusteringKeyType() {
         return ClusteringKeyType;
     }
-     
+
     public void setClusteringKeyType(String clusteringKeyType) {
         ClusteringKeyType = clusteringKeyType;
     }
@@ -98,7 +122,5 @@ public class Record extends Hashtable<String, Object> implements Comparable<Reco
     public void setClusteringKeyName(String clusteringKeyName) {
         ClusteringKeyName = clusteringKeyName;
     }
-
-
 
 }

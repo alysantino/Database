@@ -111,8 +111,8 @@ public class page implements Serializable {
 					i++;
 				}
 				i = Pageindex;
-				for (int j = 0; j < NoOfPagesToShift; j++) {
-					Record lastRecord = Table.getPages().get(i).getRecords().get(n - 1);
+				for (int j = 0; j < NoOfPagesToShift-1; j++) {
+					Record lastRecord = Table.getPages().get(i).getRecords().get(n -1);
 					Table.getPages().get(i + 1).getRecords().add(0, lastRecord);
 					Table.getPages().get(i).getRecords().remove(n - 1);
 					Table.getPages().get(i).updatePage();
