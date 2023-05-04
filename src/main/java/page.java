@@ -49,7 +49,11 @@ public class page implements Serializable {
 				return mid;
 			}
 		}
+<<<<<<< HEAD
 		return low;// return low
+=======
+		return low;
+>>>>>>> 165632edef0615d53b314f5ae5b9aaa0ea0c5840
 	}
 
 	private int readMaxNumOfRows() {
@@ -111,6 +115,7 @@ public class page implements Serializable {
 					i++;
 				}
 				i = Pageindex;
+<<<<<<< HEAD
 				for (int j = 0; j < NoOfPagesToShift; j++) {
 					int size = Table.getPages().get(i).getRecords().size();
 					Record lastRecord = Table.getPages().get(i).getRecords().get(size - 1);
@@ -127,6 +132,12 @@ public class page implements Serializable {
 					}
 					Table.getPages().get(i + 1).getRecords().add(0, lastRecord);
 					Table.getPages().get(i).getRecords().remove(size - 1);
+=======
+				for (int j = 0; j < NoOfPagesToShift-1; j++) {
+					Record lastRecord = Table.getPages().get(i).getRecords().get(n -1);
+					Table.getPages().get(i + 1).getRecords().add(0, lastRecord);
+					Table.getPages().get(i).getRecords().remove(n - 1);
+>>>>>>> 165632edef0615d53b314f5ae5b9aaa0ea0c5840
 					Table.getPages().get(i).updatePage();
 					Table.getPages().get(i + 1).updatePage();
 					i++;
@@ -189,6 +200,15 @@ public class page implements Serializable {
 		return null; // no clustering key found for the table
 	}
 
+<<<<<<< HEAD
+=======
+	public void delete(Record r) throws IOException {
+		int Recordindex = binarySearch(r);
+		recordsInPage.remove(Recordindex);
+		this.updatePage();
+	}
+
+>>>>>>> 165632edef0615d53b314f5ae5b9aaa0ea0c5840
 	// getter for min and max
 
 	public Comparable getMin() {
