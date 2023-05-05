@@ -1,14 +1,19 @@
 package main.java;
 
-public class octTree {
-    int maxHeight;
-    int minHeight;
-    int minWidth;
-    int maxWidth;
-    int maxDepth;
-    int minDepth;
+import java.util.ArrayList;
 
-    public octTree() throws DBAppException {
+public class octTree {
+    Node node;
+    String strTableName;
+    String[] strarrColName;
+
+    public octTree(Comparable xMin,Comparable xMax, Comparable yMin,Comparable yMax,
+    Comparable zMin,Comparable zMax, String strTableName, String[] strarrColName) throws DBAppException {
+        node = new Node(xMin, xMax, yMin, yMax, zMin, zMax);
+        this.strTableName=strTableName;
+        this.strarrColName=strarrColName;
+        node.setColName(strarrColName);
+        node.setTableName(strTableName);
 
     }
 }
