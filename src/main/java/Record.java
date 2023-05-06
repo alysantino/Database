@@ -13,25 +13,11 @@ public class Record extends Hashtable<String, Object> implements Comparable<Reco
     private Object ClusteringKeyValue;
     private String ClusteringKeyName;
 
-<<<<<<< HEAD
     public Record(Hashtable<String, Object> values, String ClusteringKeyType, Table table) throws DBAppException {
         super();
         this.values = values;
         this.ClusteringKeyType = ClusteringKeyType;
         this.ClusteringKeyName = DBApp.getClusteringKeyName(table.getTable_name());
-=======
-    public Record(Hashtable<String, Object> values, String ClusteringKeyType, Table table) {
-        super();
-        this.values = values;
-        this.ClusteringKeyType = ClusteringKeyType;
-        try {
-            this.ClusteringKeyName = DBApp.getClusteringKeyName(table.getTable_name());
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-
->>>>>>> 165632edef0615d53b314f5ae5b9aaa0ea0c5840
     }
 
     // update the value of a specific column
@@ -40,7 +26,6 @@ public class Record extends Hashtable<String, Object> implements Comparable<Reco
     }
 
     public boolean containsValues(Hashtable<String, Object> values) {
-<<<<<<< HEAD
         boolean contains = true;
         for (String key : values.keySet()) {
             if (!this.values.get(key).equals(values.get(key))) {
@@ -48,18 +33,6 @@ public class Record extends Hashtable<String, Object> implements Comparable<Reco
                 break;
             } else {
                 contains = true;
-=======
-        // check if this record contains the values in the hashtable
-        System.out.println("contains");
-        boolean contains = true;
-        for (String key : values.keySet()) {
-            System.out.println(this.values.get(key)+" "+ values.get(key));
-            if (!this.values.get(key).equals(values.get(key))) {
-                contains= false;
-                break;
-            } else {
-                contains= true;
->>>>>>> 165632edef0615d53b314f5ae5b9aaa0ea0c5840
                 break;
             }
         }

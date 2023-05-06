@@ -14,6 +14,24 @@ public class octTree {
         this.strarrColName=strarrColName;
         node.setColName(strarrColName);
         node.setTableName(strTableName);
+    }
 
+    public void insert(Record record) throws DBAppException {
+        node.insert(record);
+    }
+
+    //tostring method
+    public String toString(){
+        return node.toString();
+    }
+
+    //get table name
+    public String getTableName(){
+        return strTableName;
+    }
+
+    //get column name
+    public String[] getColName(){
+        return strarrColName;
     }
 }
