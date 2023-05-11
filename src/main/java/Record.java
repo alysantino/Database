@@ -12,6 +12,8 @@ public class Record extends Hashtable<String, Object> implements Comparable<Reco
     private String ClusteringKeyType;
     private Object ClusteringKeyValue;
     private String ClusteringKeyName;
+    private int pageIndex;
+    private int recordIndex;
 
     public Record(Hashtable<String, Object> values, String ClusteringKeyType, Table table) throws DBAppException {
         super();
@@ -113,5 +115,23 @@ public class Record extends Hashtable<String, Object> implements Comparable<Reco
     public void setClusteringKeyName(String clusteringKeyName) {
         ClusteringKeyName = clusteringKeyName;
     }
+
+    public int getPageIndex() {
+        return pageIndex;
+    }
+
+    public void setPageIndex(int pageIndex) {
+        this.pageIndex = pageIndex;
+    }
+
+    public int getRecordIndex() {
+        return recordIndex;
+    }
+
+    public void setRecordIndex(int recordIndex) {
+        this.recordIndex = recordIndex;
+    }
+
+
 
 }

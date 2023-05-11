@@ -71,6 +71,7 @@ public class page implements Serializable {
 	// if page is full and shift all records to the right
 	public void insert(Record r) throws IOException {
 		int Recordindex = binarySearch(r);
+		r.setRecordIndex(Recordindex);
 		if (recordsInPage.size() < n && recordsInPage.size() != 0) {
 			recordsInPage.add(Recordindex, r);
 			this.updatePage();

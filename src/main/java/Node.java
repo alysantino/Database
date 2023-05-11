@@ -31,6 +31,42 @@ public class Node {
         this.zMax = zMax;
     }
 
+    public void insert(Record record) {
+        if (points.size() == 0 && children.size() == 0) {
+            this.points.add(record);
+            return;
+        }
+        if (isFull() && isLeaf()) {
+            this.split();
+            System.out.println("split");
+            this.printNodeChildren();
+            redistribute(this);
+            this.printNodeChildren();
+            Node newnode = getNode(this.children, record);
+            newnode.insert(record);
+            this.printNodeChildren();
+            return;
+        }
+        if (!isFull() && isLeaf()) {
+            this.points.add(record);
+            return;
+        }
+        if (!isLeaf()) {
+            Node node = getNode(this.children, record);
+            node.insert(record);
+            return;
+        }
+    }
+
+    private Node getNode(ArrayList<Node> children, Record record) {
+        for (Node node : children) {
+            if (node.isInRange(record)) {
+                return node;
+            }
+        }
+        return null;
+    }
+
     public boolean isLeaf() {
         return children.size() == 0;
     }
@@ -54,10 +90,12 @@ public class Node {
         node.setColName(this.strarrColName);
         node.setTableName(this.strTableName);
         children.add(node);
+
         node = new Node(xMin, getMid(xMin, xMax), getMid(yMin, yMax), yMax, zMin, getMid(zMin, zMax));
         node.setColName(this.strarrColName);
         node.setTableName(this.strTableName);
         children.add(node);
+
         node = new Node(getMid(xMin, xMax), xMax, yMin, getMid(yMin, yMax), zMin, getMid(zMin, zMax));
         node.setColName(this.strarrColName);
         node.setTableName(this.strTableName);
@@ -81,13 +119,13 @@ public class Node {
 
     public Comparable getMid(Comparable min, Comparable max) {
         if (max instanceof Integer) {
-            return (int) max - (int) min;
+            return (int) min + ((int) max - (int) min) / 2;
         }
         if (max instanceof Double) {
-            return (double) max - (double) min;
+            return (double) min + ((double) max - (double) min) / 2;
         }
         if (max instanceof Date) {
-            return ((Date) max).getTime() - ((Date) min).getTime();
+            return ((Date) min).getTime() + (((Date) max).getTime() - ((Date) min).getTime()) / 2;
         }
         if (max instanceof String) {
             return getMiddleString((String) min, (String) max);
@@ -97,12 +135,12 @@ public class Node {
 
     private void redistribute(Node node) {
         for (int i = 0; i < node.points.size(); i++) {
+            System.out.println("the point is " + node.points.get(i).getValues());
             for (int j = 0; j < node.children.size(); j++) {
-                System.out.println("in node number " + j);
-                System.out.println("point " + node.points.get(i).getValues().get(strarrColName[0]));
                 if (node.children.get(j).isInRange(node.points.get(i))) {
                     node.children.get(j).points.add(node.points.get(i));
                     System.out.println("added in node " + node.points.get(i).getValues().get(strarrColName[0]));
+                    break;
                 }
             }
         }
@@ -110,13 +148,14 @@ public class Node {
     }
 
     private boolean isInRange(Record record) {
-        System.out.println("in is in range " +  this.xMin+ " " + this.xMax+ " " + this.yMin+ " " + this.yMax+ " " + this.zMin+ " " + this.zMax);
-        if (((Comparable) record.getValues().get(strarrColName[0])).compareTo(this.xMin) > 0
-                && ((Comparable) record.getValues().get(strarrColName[0])).compareTo(this.xMax) < 0) {
-            if (((Comparable) record.getValues().get(strarrColName[1])).compareTo(this.yMin) > 0
-                    && ((Comparable) record.getValues().get(strarrColName[1])).compareTo(this.yMax) < 0) {
-                if (((Comparable) record.getValues().get(strarrColName[2])).compareTo(this.zMin) > 0
-                        && ((Comparable) record.getValues().get(strarrColName[2])).compareTo(this.zMax) < 0) {
+        this.printNodeRanges();
+        if (((Comparable) record.getValues().get(strarrColName[0])).compareTo(this.xMin) >= 0
+                && ((Comparable) record.getValues().get(strarrColName[0])).compareTo(this.xMax) <= 0) {
+            if (((Comparable) record.getValues().get(strarrColName[1])).compareTo(this.yMin) >= 0
+                    && ((Comparable) record.getValues().get(strarrColName[1])).compareTo(this.yMax) <= 0) {
+                if (((Comparable) record.getValues().get(strarrColName[2])).compareTo(this.zMin) >= 0
+                        && ((Comparable) record.getValues().get(strarrColName[2])).compareTo(this.zMax) <= 0) {
+                    System.out.println("in range");
                     return true;
                 }
                 return false;
@@ -124,20 +163,6 @@ public class Node {
             return false;
         } else
             return false;
-    }
-
-    public void insert(Record record) {
-        if (points.size() == 0 && children.size() == 0) {
-            points.add(record);
-            return;
-        }
-
-        if (isFull() && isLeaf()) {
-            split();
-            redistribute(this);
-            insert(record);
-        } else
-            points.add(record);
     }
 
     private int readMaxNumOfEntries() {
@@ -210,8 +235,19 @@ public class Node {
         return s;
     }
 
-    public void printNodeValues(){
-        System.out.println("xMin: " + xMin + " xMax: " + xMax + " yMin: " + yMin + " yMax: " + yMax + " zMin: " + zMin + " zMax: " + zMax);
+    public void printNodeValues() {
+        System.out.println(this.children);
     }
+
+    public void printNodeRanges(){
+        System.out.println("xMin: " + xMin + " xMax: " + xMax + " yMin: " + yMin + " yMax: " + yMax + " zMin: " + zMin
+                + " zMax: " + zMax);
+    }
+
+    public void printNodeChildren() {
+        System.out.println(this.children);
+    }
+
+    // main method to test split and getmid methods
 
 }

@@ -26,7 +26,6 @@ public class DBApp {
         try {
             Table table = new Table(strTableName, strClusteringKeyColumn, htblColNameType, htblColNameMin,
                     htblColNameMax);
-            System.out.println("Table created successfully");
             tables.put(strTableName, table);
         } catch (IOException e) {
             throw new DBAppException("table creation failed");
@@ -76,6 +75,7 @@ public class DBApp {
                 deserialize(table, page.getPageindex());
             if (checkRecordEntries(record, strTableName) == false)
                 throw new DBAppException("Record entries are not valid " + record);
+            record.setPageIndex(page.getPageindex());
             page.insert(record);
             table.updateTable();
             serialize(page);
@@ -140,7 +140,7 @@ public class DBApp {
         page page = getPage(table, (Comparable) getClusteringKeyValue(record, strTableName));
         int index = page.getPageindex();
         // if (checkRecordEntries(record, strTableName) == false)
-        //     throw new DBAppException("Record entries are not valid " + record);
+        // throw new DBAppException("Record entries are not valid " + record);
         deserialize(table, index);
         page.update(record, htblColNameValue);
         serialize(page);
@@ -168,15 +168,14 @@ public class DBApp {
         octTree index = new octTree(heightMin, heightMax, widthMin, widthMax, depthMin, depthMax, strTableName,
                 strarrColName);
         populateIndex(index, strTableName);
-        System.out.println(index);
+        index.getRoot().printNodeChildren();
     }
-
 
     private Comparable getMax(String tableName, String colName) throws DBAppException {
         Table table = getTable(tableName);
-        Comparable max = (Comparable)table.getPages().get(0).getRecords().get(0).getValues().get(colName);
+        Comparable max = (Comparable) table.getPages().get(0).getRecords().get(0).getValues().get(colName);
         for (int i = 0; i < table.getPages().size(); i++) {
-            page page =deserialize(table, table.getPages().get(i).getPageindex());
+            page page = deserialize(table, table.getPages().get(i).getPageindex());
             for (int j = 0; j < table.getPages().get(i).getRecords().size(); j++) {
                 Record record = page.getRecords().get(j);
                 if (((Comparable) record.getValues().get(colName)).compareTo(max) > 0) {
@@ -190,9 +189,9 @@ public class DBApp {
 
     private Comparable getMin(String tableName, String colName) throws DBAppException {
         Table table = getTable(tableName);
-        Comparable min = (Comparable)table.getPages().get(0).getRecords().get(0).getValues().get(colName);
+        Comparable min = (Comparable) table.getPages().get(0).getRecords().get(0).getValues().get(colName);
         for (int i = 0; i < table.getPages().size(); i++) {
-            page page =deserialize(table, table.getPages().get(i).getPageindex());
+            page page = deserialize(table, table.getPages().get(i).getPageindex());
             for (int j = 0; j < page.getRecords().size(); j++) {
                 Record record = page.getRecords().get(j);
                 if (((Comparable) record.getValues().get(colName)).compareTo(min) < 0) {
@@ -374,7 +373,6 @@ public class DBApp {
             out.writeObject(page);
             out.close();
             fileOut.close();
-            System.out.println("Page serialized");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -388,7 +386,6 @@ public class DBApp {
             FileInputStream fileIn = new FileInputStream(fileName);
             ObjectInputStream in = new ObjectInputStream(fileIn);
             page = (page) in.readObject();
-            System.out.println("Page deserialized");
             in.close();
             fileIn.close();
         } catch (IOException i) {
@@ -581,10 +578,10 @@ public class DBApp {
         record2.put("gpa", 2.1);
         record3.put("id", 3);
         record3.put("name", "beso");
-        record3.put("gpa", 1.2);
+        record3.put("gpa", 1.5);
         record4.put("id", 4);
         record4.put("name", "sheko");
-        record4.put("gpa", 1.2);
+        record4.put("gpa", 1.9);
         record5.put("id", 5);
         record5.put("name", "mo");
         record5.put("gpa", 3.2);
@@ -603,12 +600,12 @@ public class DBApp {
         // record10.put("id", 9);
         // record10.put("name", "ibra");
         // record10.put("gpa", 1.7);
-  
+
         db.insertIntoTable(tableName, record4);
         db.insertIntoTable(tableName, record3);
         db.insertIntoTable(tableName, record1);
-        // db.insertIntoTable(tableName, record5);
-        // db.insertIntoTable(tableName, record6);
+        db.insertIntoTable(tableName, record5);
+        db.insertIntoTable(tableName, record6);
         db.insertIntoTable(tableName, record2);
 
         Hashtable<String, Object> delete = new Hashtable<>();
@@ -620,27 +617,23 @@ public class DBApp {
         String strTableName = "students";
         String id = "1";
 
-        db.updateTable(strTableName, id, values);
+        // db.updateTable(strTableName, id, values);
 
-        System.out.println("Table " + tableName + " records:");
-        for (int i = 0; i < table.getPages().size(); i++) {
-            page page = table.getPages().get(i);
-            for (int j = 0; j < page.getRecords().size(); j++) {
-                Record record = page.getRecords().get(j);
-                System.out.println(record.getValues());
-            }
-        }
-
+        // System.out.println("Table " + tableName + " records:");
+        // for (int i = 0; i < table.getPages().size(); i++) {
+        // page page = table.getPages().get(i);
+        // for (int j = 0; j < page.getRecords().size(); j++) {
+        // Record record = page.getRecords().get(j);
+        // System.out.println(record.getValues());
+        // }
+        // }
 
         String[] strarrColNames = new String[3];
         strarrColNames[0] = "id";
         strarrColNames[1] = "gpa";
         strarrColNames[2] = "name";
         db.createIndex("students", strarrColNames);
-        System.out.println("Index created");
-        
-       
-       
+
         SQLTerm[] arrSQLTerms = new SQLTerm[2];
         arrSQLTerms[0] = new SQLTerm();
         arrSQLTerms[0]._strTableName = "students";

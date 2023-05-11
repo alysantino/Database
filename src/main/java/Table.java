@@ -42,7 +42,6 @@ public class Table implements Serializable {
             metadata_string += (',' + htblColNameMax.get(key));
             metadata_string += "\n";
             sb.append(metadata_string);
-
             fw.write(sb.toString());
         }
         fw.flush();
