@@ -10,6 +10,7 @@ public class octTree {
     public octTree(Comparable xMin,Comparable xMax, Comparable yMin,Comparable yMax,
     Comparable zMin,Comparable zMax, String strTableName, String[] strarrColName) throws DBAppException {
         node = new Node(xMin, xMax, yMin, yMax, zMin, zMax);
+        node.printNodeValues();
         this.strTableName=strTableName;
         this.strarrColName=strarrColName;
         node.setColName(strarrColName);
@@ -34,4 +35,6 @@ public class octTree {
     public String[] getColName(){
         return strarrColName;
     }
+
+
 }

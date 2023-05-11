@@ -210,4 +210,8 @@ public class Node {
         return s;
     }
 
+    public void printNodeValues(){
+        System.out.println("xMin: " + xMin + " xMax: " + xMax + " yMin: " + yMin + " yMax: " + yMax + " zMin: " + zMin + " zMax: " + zMax);
+    }
+
 }

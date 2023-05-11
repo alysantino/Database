@@ -139,8 +139,8 @@ public class DBApp {
         Record record = new Record(clusteringKey, clusteringKeyType, getTable(strTableName));
         page page = getPage(table, (Comparable) getClusteringKeyValue(record, strTableName));
         int index = page.getPageindex();
-        if (checkRecordEntries(record, strTableName) == false)
-            throw new DBAppException("Record entries are not valid " + record);
+        // if (checkRecordEntries(record, strTableName) == false)
+        //     throw new DBAppException("Record entries are not valid " + record);
         deserialize(table, index);
         page.update(record, htblColNameValue);
         serialize(page);
@@ -545,7 +545,6 @@ public class DBApp {
     public static void main(String[] args) throws Throwable {
         DBApp db = new DBApp();
         db.init();
-        // create a new table
         String tableName = "students";
         String clusteringKey = "id";
         Hashtable<String, String> colNameType = new Hashtable<>();
@@ -562,7 +561,7 @@ public class DBApp {
         htblColNameMax.put("gpa", "5.0");
 
         db.createTable(tableName, clusteringKey, colNameType, htblColNameMin, htblColNameMax);
-        // get the table from the hash table
+
         Table table = db.getTable(tableName);
         Hashtable<String, Object> record1 = new Hashtable<>();
         Hashtable<String, Object> record2 = new Hashtable<>();
@@ -608,8 +607,8 @@ public class DBApp {
         db.insertIntoTable(tableName, record4);
         db.insertIntoTable(tableName, record3);
         db.insertIntoTable(tableName, record1);
-        db.insertIntoTable(tableName, record5);
-        db.insertIntoTable(tableName, record6);
+        // db.insertIntoTable(tableName, record5);
+        // db.insertIntoTable(tableName, record6);
         db.insertIntoTable(tableName, record2);
 
         Hashtable<String, Object> delete = new Hashtable<>();
@@ -633,12 +632,12 @@ public class DBApp {
         }
 
 
-        // String[] strarrColNames = new String[3];
-        // strarrColNames[0] = "id";
-        // strarrColNames[1] = "gpa";
-        // strarrColNames[2] = "name";
-        // db.createIndex("students", strarrColNames);
-        // System.out.println("Index created");
+        String[] strarrColNames = new String[3];
+        strarrColNames[0] = "id";
+        strarrColNames[1] = "gpa";
+        strarrColNames[2] = "name";
+        db.createIndex("students", strarrColNames);
+        System.out.println("Index created");
         
        
        
