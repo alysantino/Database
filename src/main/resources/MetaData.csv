@@ -1,4 +1,5 @@
 Table Name, Column Name, Column Type, ClusteringKey, IndexName,IndexType, min, max 
 students,gpa,java.lang.Double,false,IDGPANAM,Octree,0.0,5.0
 students,name,java.lang.String,false,IDGPANAM,Octree,aaa,zzz
+students,birthday,java.util.Date,false,null,null,1999-01-01,2000-01-01
 students,id,java.lang.Integer,true,IDGPANAM,Octree,0,1000

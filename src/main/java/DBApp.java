@@ -500,6 +500,8 @@ public class DBApp {
             String line;
             while ((line = reader.readLine()) != null) {
                 String[] parts = line.split(",");
+                if(r.getValues().get(parts[1])==null)
+                    continue;
                 if (parts[0].equals(strTableName)) {
                     if (parts[2].equals("java.lang.Integer")) {
                         if (!(r.getValues().get(parts[1]) instanceof Integer) || ((Integer) r.getValues().get(parts[1]))
@@ -584,14 +586,17 @@ public class DBApp {
         colNameType.put("id", "java.lang.Integer");
         colNameType.put("name", "java.lang.String");
         colNameType.put("gpa", "java.lang.Double");
+        colNameType.put("birthday", "java.util.Date");
         Hashtable htblColNameMin = new Hashtable();
         htblColNameMin.put("id", "0");
         htblColNameMin.put("name", "aaa");
         htblColNameMin.put("gpa", "0.0");
+        htblColNameMin.put("birthday", "1999-01-01");
         Hashtable htblColNameMax = new Hashtable();
         htblColNameMax.put("id", "1000");
         htblColNameMax.put("name", "zzz");
         htblColNameMax.put("gpa", "5.0");
+        htblColNameMax.put("birthday", "2000-01-01");
 
         db.createTable(tableName, clusteringKey, colNameType, htblColNameMin, htblColNameMax);
 
