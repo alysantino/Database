@@ -168,6 +168,17 @@ public class DBApp {
         octTree index = new octTree(heightMin, heightMax, widthMin, widthMax, depthMin, depthMax, strTableName,
                 strarrColName);
         populateIndex(index, strTableName);
+        // get the first 3 characters of the colName capatlize them and add them to the
+        // index name
+        String indexName = "";
+        for (int i = 0; i < strarrColName.length; i++) {
+            if (strarrColName[i].length() >= 3) {
+                indexName +=strarrColName[i].substring(0, 3).toUpperCase();
+                System.out.println(i);
+            } else
+                indexName += strarrColName[i].substring(0, 2).toUpperCase();
+        }
+        writeIndexOnMetadata(strarrColName, indexName, "Octree");
         index.getRoot().printNodeChildren();
     }
 
@@ -536,6 +547,31 @@ public class DBApp {
             return true;
         } catch (IOException e) {
             throw new DBAppException("IO Exception");
+        }
+    }
+
+    private void writeIndexOnMetadata(String[] columns, String indexName, String indexType) {
+        try {
+            BufferedReader reader = new BufferedReader(new FileReader("src/main/resources/MetaData.csv"));
+            List<String> modifiedLines = new ArrayList<>();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] parts = line.split(",");
+                if (parts[1].equals(columns[0]) || parts[1].equals(columns[1]) || parts[1].equals(columns[2])) {
+                    parts[4] = indexName;
+                    parts[5] = indexType;
+                    line = String.join(",", parts);
+                }
+                modifiedLines.add(line);
+            }
+            reader.close();
+            BufferedWriter writer = new BufferedWriter(new FileWriter("src/main/resources/MetaData.csv"));
+            for (String modifiedLine : modifiedLines) {
+                writer.write(modifiedLine + "\n");
+            }
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
