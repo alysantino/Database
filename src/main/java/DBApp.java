@@ -27,6 +27,7 @@ public class DBApp {
             Table table = new Table(strTableName, strClusteringKeyColumn, htblColNameType, htblColNameMin,
                     htblColNameMax);
             tables.put(strTableName, table);
+            serializeTable(table);
         } catch (IOException e) {
             throw new DBAppException("table creation failed");
         }
@@ -79,6 +80,7 @@ public class DBApp {
             page.insert(record);
             table.updateTable();
             serialize(page);
+            serializeTable(table);
         } catch (IOException e) {
             throw new DBAppException("Insertion failed");
         }
@@ -145,6 +147,7 @@ public class DBApp {
         page.update(record, htblColNameValue);
         serialize(page);
         table.updateTable();
+        serializeTable(table);
     }
 
     public void createIndex(String strTableName, String[] strarrColName) throws DBAppException {
@@ -173,7 +176,7 @@ public class DBApp {
         String indexName = "";
         for (int i = 0; i < strarrColName.length; i++) {
             if (strarrColName[i].length() >= 3) {
-                indexName +=strarrColName[i].substring(0, 3).toUpperCase();
+                indexName += strarrColName[i].substring(0, 3).toUpperCase();
                 System.out.println(i);
             } else
                 indexName += strarrColName[i].substring(0, 2).toUpperCase();
@@ -389,6 +392,15 @@ public class DBApp {
         }
     }
 
+    public void serializeTable(Table table) throws IOException {
+        String fileName  = "src/main/resources/tables/" + table.getTable_name() + ".bin";
+        FileOutputStream fileOut = new FileOutputStream(fileName);
+        ObjectOutputStream out = new ObjectOutputStream(fileOut);
+        out.writeObject(table);
+        out.close();
+        fileOut.close();
+    }
+
     public page deserialize(Table table, int id) throws DBAppException {
         // check if the bin file exists
         String fileName = "src/main/resources/pages/" + table.getTable_name() + "page_" + id + ".bin";
@@ -405,6 +417,24 @@ public class DBApp {
             throw new DBAppException("Page not found");
         }
         return page;
+    }
+
+    public Table deserializeTable(String tableName) throws DBAppException {
+        // check if the bin file exists
+        String fileName = "src/main/resources/tables/" + tableName + ".bin";
+        Table table = null;
+        try {
+            FileInputStream fileIn = new FileInputStream(fileName);
+            ObjectInputStream in = new ObjectInputStream(fileIn);
+            table = (Table) in.readObject();
+            in.close();
+            fileIn.close();
+        } catch (IOException i) {
+            throw new DBAppException("Table not found");
+        } catch (ClassNotFoundException c) {
+            throw new DBAppException("Table not found");
+        }
+        return table;
     }
 
     private String getClusteringKeyType(String strTableName) throws DBAppException {
@@ -464,13 +494,18 @@ public class DBApp {
         return R.getValues().get(clusteringKeyName);
     }
 
-    public Table getTable(String strTableName) {
-        return tables.get(strTableName);
+    public Table getTable(String strTableName) throws DBAppException {
+        return deserializeTable(strTableName);
     }
 
     private page getPage(Table table, Comparable id) throws DBAppException {
-        if (table.getPages().size() == 0)
-            return new page(table);
+        if (table.getPages().size() == 0) {
+            page page = new page(table);
+            serialize(page);
+            deserialize(table, 0);
+            return page;
+        }
+
         page page = table.getPages().get(0);
         page lastPage = table.getPages().get(table.getPages().size() - 1);
         if (id.compareTo(page.getMin()) < 0) {
@@ -500,7 +535,7 @@ public class DBApp {
             String line;
             while ((line = reader.readLine()) != null) {
                 String[] parts = line.split(",");
-                if(r.getValues().get(parts[1])==null)
+                if (r.getValues().get(parts[1]) == null)
                     continue;
                 if (parts[0].equals(strTableName)) {
                     if (parts[2].equals("java.lang.Integer")) {
@@ -598,8 +633,7 @@ public class DBApp {
         htblColNameMax.put("gpa", "5.0");
         htblColNameMax.put("birthday", "2000-01-01");
 
-        db.createTable(tableName, clusteringKey, colNameType, htblColNameMin, htblColNameMax);
-
+        // db.createTable(tableName, clusteringKey, colNameType, htblColNameMin, htblColNameMax);
         Table table = db.getTable(tableName);
         Hashtable<String, Object> record1 = new Hashtable<>();
         Hashtable<String, Object> record2 = new Hashtable<>();
@@ -642,12 +676,12 @@ public class DBApp {
         // record10.put("name", "ibra");
         // record10.put("gpa", 1.7);
 
-        db.insertIntoTable(tableName, record4);
-        db.insertIntoTable(tableName, record3);
-        db.insertIntoTable(tableName, record1);
-        db.insertIntoTable(tableName, record5);
-        db.insertIntoTable(tableName, record6);
-        db.insertIntoTable(tableName, record2);
+        // db.insertIntoTable(tableName, record4);
+        // db.insertIntoTable(tableName, record3);
+        // db.insertIntoTable(tableName, record1);
+        // db.insertIntoTable(tableName, record5);
+        // db.insertIntoTable(tableName, record6);
+        // db.insertIntoTable(tableName, record2);
 
         Hashtable<String, Object> delete = new Hashtable<>();
         delete.put("name", "beso");
@@ -660,14 +694,14 @@ public class DBApp {
 
         // db.updateTable(strTableName, id, values);
 
-        // System.out.println("Table " + tableName + " records:");
-        // for (int i = 0; i < table.getPages().size(); i++) {
-        // page page = table.getPages().get(i);
-        // for (int j = 0; j < page.getRecords().size(); j++) {
-        // Record record = page.getRecords().get(j);
-        // System.out.println(record.getValues());
-        // }
-        // }
+        System.out.println("Table " + tableName + " records:");
+        for (int i = 0; i < table.getPages().size(); i++) {
+        page page = table.getPages().get(i);
+        for (int j = 0; j < page.getRecords().size(); j++) {
+        Record record = page.getRecords().get(j);
+        System.out.println(record.getValues());
+        }
+        }
 
         String[] strarrColNames = new String[3];
         strarrColNames[0] = "id";

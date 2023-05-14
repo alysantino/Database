@@ -1,14 +1,8 @@
 package main.java;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.nio.file.FileSystemNotFoundException;
 import java.util.Collections;
 import java.util.Hashtable;
 import java.util.Vector;
@@ -22,7 +16,7 @@ public class Table implements Serializable {
     Hashtable<String, String> htblColNameMax;
 
     public Table(String strTableName, String strClusteringKeyColumn, Hashtable<String, String> htblColNameType,
-            Hashtable<String, String> htblColNameMin, Hashtable<String, String> htblColNameMax) throws IOException, DBAppException {
+            Hashtable<String, String> htblColNameMin, Hashtable<String, String> htblColNameMax) throws IOException {
         super();
         this.pages = new Vector<page>();
         this.strTableName = strTableName;
@@ -30,9 +24,7 @@ public class Table implements Serializable {
         this.htblColNameType = htblColNameType;
         this.htblColNameMin = htblColNameMin;
         this.htblColNameMax = htblColNameMax;
-        if(checkTableExists(strTableName)){
-            return;
-        }
+
         FileWriter fw = new FileWriter("src/main/resources/MetaData.csv", true);
         for (String key : Collections.list(htblColNameType.keys())) {
             StringBuilder sb = new StringBuilder();
@@ -50,31 +42,12 @@ public class Table implements Serializable {
             metadata_string += (',' + htblColNameMax.get(key));
             metadata_string += "\n";
             sb.append(metadata_string);
+
             fw.write(sb.toString());
         }
         fw.flush();
         fw.close();
 
-    }
-
-    private boolean checkTableExists(String strTableName) throws DBAppException {
-        try {
-            BufferedReader reader = new BufferedReader(new FileReader("src/main/resources/MetaData.csv"));
-            String line;
-            while ((line = reader.readLine()) != null) {
-                String[] parts = line.split(",");
-                if (parts[0].equals(strTableName)) {
-                    return true;
-                }
-            }
-            reader.close();
-        } catch (FileNotFoundException e) {  
-            throw new DBAppException();
-        }
-        catch (IOException e) {
-            throw new DBAppException();
-        }
-        return false;
     }
 
     public void updateTable() {
@@ -114,10 +87,4 @@ public class Table implements Serializable {
         }
         return s;
     }
-    //serialize table and put it in the tables folder inside resources
-
-
-    //deserialize table and with table name and return it
-    
-
 }
