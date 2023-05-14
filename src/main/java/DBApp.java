@@ -171,8 +171,6 @@ public class DBApp {
         octTree index = new octTree(heightMin, heightMax, widthMin, widthMax, depthMin, depthMax, strTableName,
                 strarrColName);
         populateIndex(index, strTableName);
-        // get the first 3 characters of the colName capatlize them and add them to the
-        // index name
         String indexName = "";
         for (int i = 0; i < strarrColName.length; i++) {
             if (strarrColName[i].length() >= 3) {
@@ -182,6 +180,12 @@ public class DBApp {
                 indexName += strarrColName[i].substring(0, 2).toUpperCase();
         }
         writeIndexOnMetadata(strarrColName, indexName, "Octree");
+        try {
+            serializeIndex(index);
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            throw new DBAppException("Index serialization failed");
+        }
         index.getRoot().printNodeChildren();
     }
 
@@ -393,10 +397,28 @@ public class DBApp {
     }
 
     public void serializeTable(Table table) throws IOException {
-        String fileName  = "src/main/resources/tables/" + table.getTable_name() + ".bin";
+        String fileName = "src/main/resources/tables/" + table.getTable_name() + ".bin";
         FileOutputStream fileOut = new FileOutputStream(fileName);
         ObjectOutputStream out = new ObjectOutputStream(fileOut);
         out.writeObject(table);
+        out.close();
+        fileOut.close();
+    }
+
+    public void serializeIndex(octTree index) throws IOException {
+        String indexName = "";
+        String[] strarrColName = index.getColName();
+        for (int i = 0; i < strarrColName.length; i++) {
+            if (strarrColName[i].length() >= 3) {
+                indexName += strarrColName[i].substring(0, 3).toUpperCase();
+                System.out.println(i);
+            } else
+                indexName += strarrColName[i].substring(0, 2).toUpperCase();
+        }
+        String fileName = "src/main/resources/indexes/" + indexName + "index.bin";
+        FileOutputStream fileOut = new FileOutputStream(fileName);
+        ObjectOutputStream out = new ObjectOutputStream(fileOut);
+        out.writeObject(index);
         out.close();
         fileOut.close();
     }
@@ -435,6 +457,25 @@ public class DBApp {
             throw new DBAppException("Table not found");
         }
         return table;
+    }
+
+    public octTree deserializeIndex(String indexName) throws DBAppException {
+        // check if the bin file exists
+        String fileName = "src/main/resources/indexes/" + indexName + "index.bin";
+        octTree index = null;
+        try {
+            FileInputStream fileIn = new FileInputStream(fileName);
+            ObjectInputStream in = new ObjectInputStream(fileIn);
+            index = (octTree) in.readObject();
+            in.close();
+            fileIn.close();
+        } catch (IOException i) {
+            System.out.println(i.getMessage());
+            throw new DBAppException("Index not found");
+        } catch (ClassNotFoundException c) {
+            throw new DBAppException("Index not found");
+        }
+        return index;
     }
 
     private String getClusteringKeyType(String strTableName) throws DBAppException {
@@ -633,7 +674,8 @@ public class DBApp {
         htblColNameMax.put("gpa", "5.0");
         htblColNameMax.put("birthday", "2000-01-01");
 
-        // db.createTable(tableName, clusteringKey, colNameType, htblColNameMin, htblColNameMax);
+        // db.createTable(tableName, clusteringKey, colNameType, htblColNameMin,
+        // htblColNameMax);
         Table table = db.getTable(tableName);
         Hashtable<String, Object> record1 = new Hashtable<>();
         Hashtable<String, Object> record2 = new Hashtable<>();
@@ -696,18 +738,21 @@ public class DBApp {
 
         System.out.println("Table " + tableName + " records:");
         for (int i = 0; i < table.getPages().size(); i++) {
-        page page = table.getPages().get(i);
-        for (int j = 0; j < page.getRecords().size(); j++) {
-        Record record = page.getRecords().get(j);
-        System.out.println(record.getValues());
-        }
+            page page = table.getPages().get(i);
+            for (int j = 0; j < page.getRecords().size(); j++) {
+                Record record = page.getRecords().get(j);
+                System.out.println(record.getValues());
+            }
         }
 
         String[] strarrColNames = new String[3];
         strarrColNames[0] = "id";
         strarrColNames[1] = "gpa";
         strarrColNames[2] = "name";
-        db.createIndex("students", strarrColNames);
+        // db.createIndex("students", strarrColNames);
+
+        octTree index = db.deserializeIndex("IDGPANAM");
+        index.getRoot().printNodeChildren();
 
         SQLTerm[] arrSQLTerms = new SQLTerm[2];
         arrSQLTerms[0] = new SQLTerm();

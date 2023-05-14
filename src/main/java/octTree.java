@@ -1,11 +1,13 @@
 package main.java;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
-public class octTree {
+public class octTree implements Serializable{
     Node node;
     String strTableName;
     String[] strarrColName;
+    String indexName;
 
     public octTree(Comparable xMin,Comparable xMax, Comparable yMin,Comparable yMax,
     Comparable zMin,Comparable zMax, String strTableName, String[] strarrColName) throws DBAppException {
@@ -20,6 +22,10 @@ public class octTree {
 
     public void insert(Record record) throws DBAppException {
         node.insert(record);
+    }
+
+    public void delete(Record record) throws DBAppException {
+        node.delete(record);
     }
 
     //tostring method

@@ -9,7 +9,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-public class Node {
+public class Node implements Serializable{
     ArrayList<Node> children = new ArrayList<Node>();
     ArrayList<Record> points = new ArrayList<Record>();
     Comparable xMin;
@@ -55,6 +55,49 @@ public class Node {
             Node node = getNode(this.children, record);
             node.insert(record);
             return;
+        }
+    }
+
+    public ArrayList<Node> search(Record record) {
+        ArrayList<Node> nodes = new ArrayList<Node>();
+        if (isLeaf()) {
+            for (Record r : points) {
+                if (r.equals(record)) {
+                    nodes.add(this);
+                }
+            }
+        } else {
+            for (Node node : children) {
+                if (node.isInRange(record)) {
+                    nodes.addAll(node.search(record));
+                }
+            }
+        }
+        return nodes;
+    }
+
+    public void delete(Record record) {
+        ArrayList<Node> nodes = search(record);
+        for (Node node : nodes) {
+            node.deleteFromNode(record);
+        }
+    }
+
+    public void deleteFromNode(Record record){
+        if (isLeaf()) {
+            for (Record r : points) {
+                if (r.equals(record)) {
+                    points.remove(r);
+                    return;
+                }
+            }
+        } else {
+            for (Node node : children) {
+                if (node.isInRange(record)) {
+                    node.deleteFromNode(record);
+                    return;
+                }
+            }
         }
     }
 
@@ -239,7 +282,7 @@ public class Node {
         System.out.println(this.children);
     }
 
-    public void printNodeRanges(){
+    public void printNodeRanges() {
         System.out.println("xMin: " + xMin + " xMax: " + xMax + " yMin: " + yMin + " yMax: " + yMax + " zMin: " + zMin
                 + " zMax: " + zMax);
     }
