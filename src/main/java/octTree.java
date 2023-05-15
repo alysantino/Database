@@ -28,6 +28,12 @@ public class octTree implements Serializable{
         node.delete(record);
     }
 
+    public void search(SQLTerm[] arrSQLTerms) {
+        node.search(arrSQLTerms);
+
+    }
+
+
     //tostring method
     public String toString(){
         return node.toString();
@@ -46,6 +52,8 @@ public class octTree implements Serializable{
     public Node getRoot(){
         return node;
     }
+
+
 
 
 }

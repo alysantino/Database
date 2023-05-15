@@ -235,11 +235,18 @@ public class DBApp {
 
     public Iterator selectFromTable(SQLTerm[] arrSQLTerms, String[] strarrOperators)
             throws DBAppException {
+        Iterator result = null;
         // check if the array of terms and operators are valid
         if (arrSQLTerms.length != strarrOperators.length + 1) {
             throw new DBAppException("Invalid array of terms and operators");
         }
-        Iterator result = null;
+        for (int i = 0; i < arrSQLTerms.length-1; i++) {
+            if (checkIndex(arrSQLTerms[i].getTableName(), arrSQLTerms[i].getColumnName())) {
+                octTree index = getIndex(arrSQLTerms[i].getTableName(), arrSQLTerms[i].getColumnName());
+                Iterator iterator1=index.search(arrSQLTerms);
+            } else
+                break;
+        }
 
         for (int i = 0; i < arrSQLTerms.length - 1; i++) {
             SQLTerm term1 = arrSQLTerms[i];
@@ -257,6 +264,42 @@ public class DBApp {
         }
         return result;
 
+    }
+
+    private boolean checkIndex(String strTableName, String colName) throws DBAppException {
+        try {
+            BufferedReader reader = new BufferedReader(new FileReader("src/main/resources/MetaData.csv"));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] parts = line.split(",");
+                if (parts[0].equals(strTableName) && parts[1].equals(colName) && !parts[4].equals("null")) {
+                    reader.close();
+                    return true;
+                }
+            }
+            reader.close();
+            return false;
+        } catch (IOException e) {
+            throw new DBAppException("IO Exception");
+        }
+    }
+
+    private octTree getIndex(String strTableName, String colName) throws DBAppException {
+        try {
+            BufferedReader reader = new BufferedReader(new FileReader("src/main/resources/MetaData.csv"));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] parts = line.split(",");
+                if (parts[0].equals(strTableName) && parts[1].equals(colName) && !parts[4].equals("null")) {
+                    reader.close();
+                    return deserializeIndex(parts[4]);
+                }
+            }
+            reader.close();
+            return null;
+        } catch (IOException e) {
+            throw new DBAppException("IO Exception");
+        }
     }
 
     private Iterator intersectIterators(Iterator iterator1, Iterator iterator2) {

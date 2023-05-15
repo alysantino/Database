@@ -101,6 +101,12 @@ public class Node implements Serializable{
         }
     }
 
+    public Iterator<Record> search(SQLTerm SQLTerm) {
+        ArrayList<Record> records = new ArrayList<Record>();
+        //colNumber 0 is x 1 is y 2 is z
+    }
+
+
     private Node getNode(ArrayList<Node> children, Record record) {
         for (Node node : children) {
             if (node.isInRange(record)) {
