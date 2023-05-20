@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.nio.file.FileSystemNotFoundException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Hashtable;
 import java.util.Vector;
@@ -20,6 +21,7 @@ public class Table implements Serializable {
     Hashtable<String, String> htblColNameType;
     Hashtable<String, String> htblColNameMin;
     Hashtable<String, String> htblColNameMax;
+    ArrayList<String> Indexes = new ArrayList<String>();
 
     public Table(String strTableName, String strClusteringKeyColumn, Hashtable<String, String> htblColNameType,
             Hashtable<String, String> htblColNameMin, Hashtable<String, String> htblColNameMax) throws IOException, DBAppException {
@@ -114,10 +116,9 @@ public class Table implements Serializable {
         }
         return s;
     }
-    //serialize table and put it in the tables folder inside resources
 
-
-    //deserialize table and with table name and return it
-    
+    public ArrayList<String> getIndexes() {
+        return Indexes;
+    }
 
 }
